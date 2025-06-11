@@ -32,7 +32,7 @@ make lint
 
 ### Service Endpoints
 
-Both services expose HTTP JSON-RPC endpoints on port 8080 (`cart`) and 8081 (`stocks`).
+Both services expose HTTP endpoints on port 8080 (`cart`) and 8081 (`stocks`).
 
 
 ### Inter-Service Communication

@@ -14,7 +14,7 @@ Adds an item to a user's cart after stock validation.
 Request
 ```
 {
-    user int64
+    userID int64
     sku uint32
     count uint16
 }
@@ -34,7 +34,7 @@ Removes an item from user's cart.
 Request
 ```
 {
-    user int64
+    userID int64
     sku uint32
 }
 ```
@@ -53,7 +53,7 @@ Lists cart contents with real-time prices from Stocks service.
 Request
 ```
 {
-    user int64
+    userID int64
 }
 ```
 
@@ -79,7 +79,7 @@ Clears all items from user's cart.
 Request
 ```
 {
-    user int64
+    userID int64
 }
 ```
 
@@ -96,6 +96,37 @@ Response
 # Stocks Service
 
 Manages inventory availability, pricing, and locations.
+
+## SKU Usage
+
+All SKUs are predefined and must be registered in the sku table before use.
+
+SKU IDs are assigned manually by the maintainer and follow the format: SKU### (e.g., SKU001, SKU002).
+
+Do not create or modify SKUs on your own.
+
+Use only existing SKUs when adding items to stock or referencing products.
+
+```sql
+CREATE TABLE sku (
+    sku_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    type TEXT
+);
+
+INSERT INTO sku (sku_id, name, type) VALUES
+('SKU001', 't-shirt', 'apparel'),
+('SKU002', 'cup', 'accessory'),
+('SKU003', 'book', 'stationery'),
+('SKU004', 'pen', 'stationery'),
+('SKU005', 'powerbank', 'electronics'),
+('SKU006', 'hoody', 'apparel'),
+('SKU007', 'umbrella', 'accessory'),
+('SKU008', 'socks', 'apparel'),
+('SKU009', 'wallet', 'accessory'),
+('SKU010', 'pink-hoody', 'apparel');
+
+```
 
 ## POST stocks/item/add
 
@@ -131,7 +162,7 @@ Removes inventory items from the stocks.
 Request
 ```
 {
-    user int64
+    userID int64
     sku uint32
 }
 ```
@@ -141,7 +172,7 @@ Response
 {}
 ```
 
-## POST stocks/list
+## POST stocks/list/location
 
 Lists inventory in the stocks with pagination.
 
@@ -150,7 +181,7 @@ Lists inventory in the stocks with pagination.
 Request
 ```
 {
-    user int64
+    userID int64
     location string
     pageSize int64
     currentPage int64
@@ -172,7 +203,7 @@ Response
 }
 ```
 
-## POST stocks/get
+## POST stocks/item/get
 
 Retrieves specific stock item.
 
@@ -215,7 +246,7 @@ Response
   + Remove a stock item (by SKU) from the catalog.
 - stocks/list/location
   + List stock items filtered by location with pagination support.
-- stocks/get
+- stocks/item/get
   + Retrieve detailed information about a specific stock item (by SKU).
     
   
