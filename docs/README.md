@@ -109,22 +109,23 @@ Use only existing SKUs when adding items to stock or referencing products.
 
 ```sql
 CREATE TABLE sku (
-    sku_id TEXT PRIMARY KEY,
+    sku_id BIGINT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     type TEXT
 );
 
 INSERT INTO sku (sku_id, name, type) VALUES
-('SKU001', 't-shirt', 'apparel'),
-('SKU002', 'cup', 'accessory'),
-('SKU003', 'book', 'stationery'),
-('SKU004', 'pen', 'stationery'),
-('SKU005', 'powerbank', 'electronics'),
-('SKU006', 'hoody', 'apparel'),
-('SKU007', 'umbrella', 'accessory'),
-('SKU008', 'socks', 'apparel'),
-('SKU009', 'wallet', 'accessory'),
-('SKU010', 'pink-hoody', 'apparel');
+(1001, 't-shirt', 'apparel'),
+(2020, 'cup', 'accessory'),
+(3033, 'book', 'stationery'),
+(4044, 'pen', 'stationery'),
+(5055, 'powerbank', 'electronics'),
+(6066, 'hoody', 'apparel'),
+(7077, 'umbrella', 'accessory'),
+(8088, 'socks', 'apparel'),
+(9099, 'wallet', 'accessory'),
+(10101, 'pink-hoody', 'apparel');
+
 
 ```
 
@@ -205,7 +206,7 @@ Response
 
 ## POST stocks/item/get
 
-Retrieves specific stock item.
+Retrieves specific stock item you can change response as you want.
 
 ![cart-cart-clear](img/stock_get.png)
 
@@ -219,6 +220,11 @@ Request
 Response
 ```
 {
+  name string
+  price  uint32
+  count uint16
+  type string
+  ...
 }
 ```
 
