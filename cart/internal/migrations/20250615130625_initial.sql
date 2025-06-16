@@ -19,7 +19,9 @@
 -- Use GitHub issues for reporting bugs and requesting features, enjoy!
 
 -- +goose Up
-SELECT 'up SQL query';
+CREATE TABLE IF NOT EXISTS carts (
+    
+);
 
 -- +goose Down
 SELECT 'down SQL query';
