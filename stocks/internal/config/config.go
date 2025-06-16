@@ -15,6 +15,7 @@ var _ Config = (*StockServiceConfig)(nil)
 // Config interface provides methods to a retrieve a configuration values for stocks service.
 type Config interface {
 	Address() string
+	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 }
 
@@ -43,7 +44,7 @@ type (
 	ExternalServicesConfig struct{}
 )
 
-// LoadEnv load environment variables
+// LoadEnv load environment variables.
 func LoadEnv(path string) error {
 	if err := godotenv.Load(path); err != nil {
 		return fmt.Errorf("failed to load environment variables: %w", err)
@@ -65,6 +66,10 @@ func NewStockServiceConfig() (*StockServiceConfig, error) {
 // Address returns the server address in format host:port.
 func (c *StockServiceConfig) Address() string {
 	return net.JoinHostPort("", c.Server.HTTPPort)
+}
+
+func (c *StockServiceConfig) SrvConfig() ServerConfig {
+	return c.Server
 }
 
 // DbConfig returns the postgresql configuration.
