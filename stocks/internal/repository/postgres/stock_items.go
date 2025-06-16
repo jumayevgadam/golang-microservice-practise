@@ -22,10 +22,10 @@ func NewStockServiceRepository(psqlDB connection.DB) *stockServiceRepository {
 
 func (s *stockServiceRepository) SaveStockItem(ctx context.Context, stockItem domain.StockItem) error {
 	_, err := s.psqlDB.Exec(ctx, `
-		INSERT INTO stock_items (user_id, sku, count, name, type, price, location)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		stockItem.UserID, stockItem.Sku.ID, stockItem.Count, stockItem.Sku.Name,
-		stockItem.Sku.Type, stockItem.Price, stockItem.Location,
+		INSERT INTO stock_items (user_id, sku_id, count, price, location)
+		VALUES ($1, $2, $3, $4, $5)`,
+		stockItem.UserID, stockItem.Sku.ID, stockItem.Count,
+		stockItem.Price, stockItem.Location,
 	)
 	if err != nil {
 		return err
@@ -38,9 +38,10 @@ func (s *stockServiceRepository) GetStockItem(ctx context.Context, userID domain
 	var stockItemData StockItemData
 
 	err := s.psqlDB.Get(ctx, &stockItemData, `
-		SELECT user_id, sku, count, name, type, price, location, created_at, updated_at
-		FROM stock_items
-		WHERE user_id = $1 AND sku = $2`,
+		SELECT si.user_id, s.sku_id, si.count, s.name, s.type, si.price, si.location, si.created_at, si.updated_at
+		FROM stock_items si 
+		LEFT JOIN sku s ON s.sku_id = si.sku_id
+		WHERE si.user_id = $1 AND si.sku_id = $2`,
 		userID,
 		skuID,
 	)
@@ -63,7 +64,7 @@ func (s *stockServiceRepository) UpdateStockItem(ctx context.Context, stockItem 
 			price = COALESCE(NULLIF($2, 0), price),
 			location = COALESCE(NULLIF($3, ''), location),
 			updated_at = NOW()
-		WHERE user_id = $4 AND sku = $5`,
+		WHERE user_id = $4 AND sku_id = $5`,
 		stockItem.Count, stockItem.Price, stockItem.Location,
 		stockItem.UserID, stockItem.Sku.ID,
 	)
@@ -74,10 +75,10 @@ func (s *stockServiceRepository) UpdateStockItem(ctx context.Context, stockItem 
 	return nil
 }
 
-func (s *stockServiceRepository) DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {
+func (s *stockServiceRepository) DeleteStockItemFromStorage(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {
 	_, err := s.psqlDB.Exec(ctx, `
 		DELETE FROM stock_items
-		WHERE user_id = $1 AND sku = $2`,
+		WHERE user_id = $1 AND sku_id = $2`,
 		userID, skuID,
 	)
 	if err != nil {
@@ -95,9 +96,10 @@ func (s *stockServiceRepository) GetStockItemBySku(ctx context.Context, skuID do
 	var stockItemData StockItemData
 
 	err := s.psqlDB.Get(ctx, &stockItemData, `
-		SELECT user_id, sku, name, type, count, price, location, created_at, updated_at
-		FROM stock_items
-		WHERE sku = $1`,
+		SELECT si.user_id, s.sku_id, s.name, s.type, si.count, si.price, si.location, si.created_at, si.updated_at
+		FROM stock_items si
+		LEFT JOIN sku s ON s.sku_id = si.sku_id
+		WHERE si.sku_id = $1`,
 		skuID,
 	)
 	if err != nil {
@@ -133,8 +135,9 @@ func (s *stockServiceRepository) ListStockItemsByLocation(ctx context.Context, f
 	offset := (filter.CurrentPage - 1) * filter.PageSize
 
 	err := s.psqlDB.Select(ctx, &stockItemsData, `
-		SELECT user_id, sku, name, count, type, price, location, created_at, updated_at
-		FROM stock_items
+		SELECT si.user_id, s.sku_id, s.name, s.type, si.count, si.price, si.location, si.created_at, si.updated_at
+		FROM stock_items si
+		LEFT JOIN sku s ON s.sku_id = si.sku_id
 		WHERE user_id = $1 AND location = $2
 		OFFSET $3 LIMIT $4`,
 		filter.UserID,

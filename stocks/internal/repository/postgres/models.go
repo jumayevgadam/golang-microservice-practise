@@ -21,7 +21,7 @@ func (s *SKU) ToDomain() domain.SKU {
 
 type StockItemData struct {
 	UserID    int64     `db:"user_id"`
-	SkuID     uint32    `db:"sku"`
+	SkuID     uint32    `db:"sku_id"`
 	Count     uint16    `db:"count"`
 	Name      string    `db:"name"`
 	Type      string    `db:"type"`

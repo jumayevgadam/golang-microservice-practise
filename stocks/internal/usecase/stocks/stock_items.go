@@ -19,27 +19,24 @@ type (
 		SaveStockItem(ctx context.Context, stockItem domain.StockItem) error
 		GetStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) (domain.StockItem, error)
 		UpdateStockItem(ctx context.Context, stockItem domain.StockItem) error
-		DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error
+		DeleteStockItemFromStorage(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error
 		GetStockItemBySku(ct context.Context, skuID domain.SKUID) (domain.StockItem, error)
 		ListStockItemsByLocation(ctx context.Context, filter domain.Filter) ([]domain.StockItem, error)
 		CountStockItems(ctx context.Context, userID domain.UserID, location string) (uint16, error)
 	}
 )
 
-type Deps struct {
+type stockServiceUseCase struct {
 	SKURepository
 	StockServiceRepository
 }
 
-type stockServiceUseCase struct {
-	Deps
-}
-
 var _ usecase.StockServiceUseCase = (*stockServiceUseCase)(nil)
 
-func NewStockServiceUseCase(d Deps) *stockServiceUseCase {
+func NewStockServiceUseCase(skuRepo SKURepository, stockRepo StockServiceRepository) *stockServiceUseCase {
 	return &stockServiceUseCase{
-		Deps: d,
+		SKURepository:          skuRepo,
+		StockServiceRepository: stockRepo,
 	}
 }
 
@@ -65,7 +62,7 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 }
 
 func (s *stockServiceUseCase) DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {
-	return s.Deps.DeleteStockItem(ctx, userID, skuID)
+	return s.DeleteStockItemFromStorage(ctx, userID, skuID)
 }
 
 func (s *stockServiceUseCase) GetStockItemBySKU(ctx context.Context, skuID domain.SKUID) (domain.StockItem, error) {
