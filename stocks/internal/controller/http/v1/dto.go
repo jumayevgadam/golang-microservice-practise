@@ -33,6 +33,7 @@ type GetStockItemRequest struct {
 }
 
 type GetStockItemResponse struct {
+	SkuID    uint32 `json:"sku"`
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Count    uint16 `json:"count"`

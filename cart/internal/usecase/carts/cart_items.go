@@ -19,6 +19,7 @@ type (
 		RemoveCartItem(ctx context.Context, userID domain.UserID, skuID domain.SkuID) error
 		RemoveAllCartItems(ctx context.Context, userID domain.UserID) error
 		GetCartItemByUserID(ctx context.Context, userID domain.UserID, skuID domain.SkuID) (domain.CartItem, error)
+		ListCartItemsByUserID(ctx context.Context, userID domain.UserID) ([]domain.CartItem, error)
 	}
 )
 
@@ -66,4 +67,34 @@ func (u *cartServiceUseCase) DeleteCartItem(ctx context.Context, userID domain.U
 
 func (u *cartServiceUseCase) ClearCartItems(ctx context.Context, userID domain.UserID) error {
 	return u.RemoveAllCartItems(ctx, userID)
+}
+
+func (u *cartServiceUseCase) ListCartItems(ctx context.Context, userID domain.UserID) (domain.ListCartItems, error) {
+	var listCartItemsResponse domain.ListCartItems
+	var totalPrice uint32
+
+	listCartItems, err := u.ListCartItemsByUserID(ctx, userID)
+	if err != nil {
+		return domain.ListCartItems{}, err
+	}
+	// call service...
+	stockItems := make([]domain.StockItemBySKU, 0, len(listCartItems))
+
+	for _, listCartItem := range listCartItems {
+		stockItem, err := u.GetStockItemBySKU(ctx, listCartItem.SkuID)
+		if err != nil {
+			continue
+		}
+
+		stockItems = append(stockItems, stockItem)
+	}
+
+	for _, stockItem := range stockItems {
+		totalPrice += stockItem.Price * uint32(stockItem.Count)
+	}
+
+	listCartItemsResponse.Items = stockItems
+	listCartItemsResponse.TotalPrice = totalPrice
+
+	return listCartItemsResponse, nil
 }

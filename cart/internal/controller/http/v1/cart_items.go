@@ -81,3 +81,20 @@ func (c *cartServiceController) ClearCartItems(w http.ResponseWriter, r *http.Re
 
 	httphelper.Respond(w, http.StatusOK, map[string]string{"message": "cart items successfully deleted"})
 }
+
+func (c *cartServiceController) ListCartItems(w http.ResponseWriter, r *http.Request) {
+	var listCartItemsRequest ListCartItemsRequest
+	if err := httphelper.RequestValidate(r, &listCartItemsRequest); err != nil {
+		httphelper.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	listCartItems, err := c.cartServiceUC.ListCartItems(r.Context(), domain.UserID(listCartItemsRequest.UserID))
+	if err != nil {
+		httphelper.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := ToListResponse(listCartItems)
+	httphelper.Respond(w, http.StatusOK, response)
+}

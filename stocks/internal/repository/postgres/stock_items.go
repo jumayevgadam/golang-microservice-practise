@@ -98,7 +98,7 @@ func (s *stockServiceRepository) GetStockItemBySku(ctx context.Context, skuID do
 	err := s.psqlDB.Get(ctx, &stockItemData, `
 		SELECT si.user_id, s.sku_id, s.name, s.type, si.count, si.price, si.location, si.created_at, si.updated_at
 		FROM stock_items si
-		LEFT JOIN sku s ON s.sku_id = si.sku_id
+		INNER JOIN sku s ON s.sku_id = si.sku_id
 		WHERE si.sku_id = $1`,
 		skuID,
 	)

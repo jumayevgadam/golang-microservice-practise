@@ -13,3 +13,4 @@ CREATE TABLE IF NOT EXISTS cart_items (
 -- +goose StatementBegin
 DROP TABLE IF EXISTS cart_items;
 -- +goose StatementEnd
+    

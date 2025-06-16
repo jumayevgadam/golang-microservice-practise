@@ -102,3 +102,24 @@ func (c *cartServiceRepo) RemoveAllCartItems(ctx context.Context, userID domain.
 
 	return nil
 }
+
+func (c *cartServiceRepo) ListCartItemsByUserID(ctx context.Context, userID domain.UserID) ([]domain.CartItem, error) {
+	var listCartItemsData []CartItemData
+
+	err := c.psqlDB.Select(ctx, &listCartItemsData, `
+		SELECT user_id, sku, count, created_at, updated_at
+		FROM cart_items
+		WHERE user_id = $1`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	listCartItems := make([]domain.CartItem, 0, len(listCartItemsData))
+	for _, listCartItem := range listCartItemsData {
+		listCartItems = append(listCartItems, listCartItem.ToDomain())
+	}
+
+	return listCartItems, nil
+}

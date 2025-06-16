@@ -81,6 +81,7 @@ func (c *stockServiceController) GetStockItemBySKU(w http.ResponseWriter, r *htt
 	}
 
 	resp := GetStockItemResponse{
+		SkuID:    uint32(stockItem.Sku.ID),
 		Name:     stockItem.Sku.Name,
 		Type:     stockItem.Sku.Type,
 		Count:    stockItem.Count,
