@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -67,8 +66,6 @@ func (s *stockService) GetStockItemBySKU(ctx context.Context, skuID domain.SkuID
 	if err != nil {
 		return domain.StockItemBySKU{}, fmt.Errorf("failed to read response body: %w", err)
 	}
-
-	log.Println(string(body))
 
 	var stockItem stockItemResponse
 	if err := json.Unmarshal(body, &stockItem); err != nil {
