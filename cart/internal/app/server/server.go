@@ -1,0 +1,70 @@
+package server
+
+import (
+	"cart/internal/config"
+	"cart/pkg/connection"
+	"cart/pkg/constants"
+	"context"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+type Server struct {
+	server *http.Server
+	cfg    config.Config
+	psqlDB connection.DB
+}
+
+func NewServer(
+	cfg config.Config,
+	psqlDB connection.DB,
+) *Server {
+	return &Server{
+		server: nil,
+		cfg:    cfg,
+		psqlDB: psqlDB,
+	}
+}
+
+// RunHTTPServer starts http server in goroutines and gracefully shutdown if signal catches.
+func (s *Server) RunHTTPServer() error {
+	// setup routes.
+	mux := s.setupRoutes()
+
+	s.server = &http.Server{
+		Addr:         s.cfg.Address(),
+		Handler:      mux,
+		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
+		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
+	}
+
+	go func() {
+		log.Printf("server starting on %+v\n", s.cfg.Address())
+
+		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("s.server.ListenAndServe: %v", err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	<-quit
+	log.Println("shutting down server...")
+
+	ctxTimeOut, cancel := context.WithTimeout(context.Background(), constants.SrvTimeOut*time.Second)
+	defer cancel()
+
+	if err := s.server.Shutdown(ctxTimeOut); err != nil {
+		log.Printf("s.server.Shutdown: %+v", err.Error())
+	}
+
+	log.Println("cart service successfully shutdown")
+
+	return nil
+}
