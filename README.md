@@ -62,13 +62,13 @@ Create service skeletons for cart and stocks services according to the [document
 
 - Must define CMD or ENTRYPOINT to start the app
 
-### 2.Write a docker-compose.yml
+### 2. Write a docker-compose.yml
 
 - Should run your app and any required dependencies (e.g., PostgreSQL)
 
 - All containers must start and communicate correctly
 
-### 3.Push your app's Docker image to a public registry
+### 3. Push your app's Docker image to a public registry
 
 - Use Docker Hub or another accessible container registry
 
@@ -83,7 +83,7 @@ I should be able to pull your image using:
     docker pull username/my-app:hw7
 ```
 
-### 4.Document the following in every service's README:
+### 4. Document the following in every service's README:
 
 - The Docker image name & tag
 
