@@ -141,8 +141,6 @@ Request
     userID int64
     sku uint32
     count uint16
-    name string
-    type string
     price  uint32
     location string
 
