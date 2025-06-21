@@ -1,0 +1,102 @@
+services:
+  cart_db:
+    image: postgres:17.5-alpine3.21
+    container_name: cart_service_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: cart_service_db 
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5435:5432"
+    restart: always
+    networks:
+      - go-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cart_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+  
+  cart_service:
+    build:
+      context: ./cart
+      dockerfile: Dockerfile
+    container_name: cart_service_backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      cart_db:
+        condition: service_healthy
+      stocks_service:
+        condition: service_started
+    env_file:
+      - cart/.env
+  
+  cart_migrator:
+    image: golang:1.24-alpine3.21
+    container_name: cart_migrator
+    working_dir: /app
+    volumes:
+      - ./cart:/app
+    depends_on:
+      cart_db:
+        condition: service_healthy
+    command: >
+      sh -c "go install github.com/pressly/goose/v3/cmd/goose@latest && 
+             goose -dir ./internal/migrations postgres 'postgres://postgres:12345@cart_db:5432/cart_service_db?sslmode=disable' up"
+
+  stocks_migrator:
+    image: golang:1.24-alpine3.21
+    container_name: stocks_migrator
+    working_dir: /app
+    volumes:
+      - ./stocks:/app
+    depends_on:
+      stocks_db:
+        condition: service_healthy
+    command: >
+       sh -c "go install github.com/pressly/goose/v3/cmd/goose@latest &&
+             goose -dir ./internal/migrations postgres 'postgres://postgres:12345@stocks_db:5432/stocks_service_db?sslmode=disable' up"
+
+  stocks_db:
+    image: postgres:17.5-alpine3.21
+    container_name: stocks_service_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: stocks_service_db
+    volumes:
+      - stocks_db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5434:5432"
+    restart: always
+    networks:
+      - go-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stocks_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  stocks_service:
+    build:
+      context: ./stocks
+      dockerfile: Dockerfile
+    container_name: stocks_service_backend
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      stocks_db:
+        condition: service_healthy
+    env_file:
+      - stocks/.env
+
+networks:
+  go-net:
+    driver: bridge
+
+volumes:
+  cart_db_data:
+  stocks_db_data:
