@@ -1,7 +1,9 @@
 # STOCKS_SERVICE INFORMATIONS
 
 ## DOCKER INFORMATION
-- 
+- **Image Name**```gadamcuma/stocks_service```
+- **Tag**```hw7```
+- **App Port**```8081```
 
 ## ENVIRONMENT VARIABLES
 - `DB_HOST`: PostgreSQL host - postgres

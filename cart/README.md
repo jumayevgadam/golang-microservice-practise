@@ -1,7 +1,9 @@
 # CART_SERVICE INFORMATIONS
 
 ## DOCKER INFORMATION
-- 
+- **Image Name**```gadamcuma/cart_service```
+- **Tag**```hw7```
+- **App Port**```8080```
 
 ## ENVIRONMENT VARIABLES
 - `DB_HOST`: PostgreSQL host - postgres

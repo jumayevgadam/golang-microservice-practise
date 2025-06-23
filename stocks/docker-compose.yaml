@@ -1,0 +1,64 @@
+services:
+  stocks_db:
+    image: postgres:17.5-alpine3.21
+    container_name: stocks_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: stocks_service_db
+    volumes:
+      - stocks_db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5434:5432"
+    restart: always
+    networks:
+      - stocks-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stocks_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  stocks_migrator:
+    image: kukymbr/goose-docker:3.24.0
+    container_name: stocks_migrator
+    working_dir: /migrations
+    volumes:
+      - ./internal/migrations:/migrations
+    depends_on:
+      stocks_db:
+        condition: service_healthy
+    networks:
+      - stocks-net
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable
+    command: >
+      sh -c "
+      goose -dir=/migrations postgres 
+      'host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable' up"
+  
+  stocks_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stocks_service_backend
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      stocks_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - stocks-net
+    restart: unless-stopped
+
+ 
+networks:
+  stocks-net:
+    driver: bridge
+
+volumes:
+  stocks_db_data:
+
