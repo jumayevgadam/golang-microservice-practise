@@ -14,6 +14,7 @@
 - `HTTP_PORT`: Application port - 8081
 - `READ_TIMEOUT`: HTTP read timeout - 15s
 - `WRITE_TIMEOUT`: HTTP write timeout - 15s
+- `STOCK_SERVICE_URL` Stock service url for checking sku - http://stocks_service_backend:8081 
 
 ## API ENDPOINTS
 - `POST /stocks/item/add`**Add a new stock item**
