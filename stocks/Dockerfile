@@ -22,6 +22,8 @@ WORKDIR /root
 # Copy binary from builder stage
 COPY --from=builder /app/bin/stocks .
 
+COPY .env .
+
 EXPOSE 8081
 
 CMD [ "./stocks" ]

@@ -22,6 +22,8 @@ WORKDIR /root
 # Copy binary from builder stage
 COPY --from=builder /app/bin/cart .
 
+COPY .env .
+
 EXPOSE 8080
 
 CMD [ "./cart" ]

@@ -1,7 +1,7 @@
 services:
   cart_db:
     image: postgres:17.5-alpine3.21
-    container_name: cart_service_db
+    container_name: cart_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
@@ -14,55 +14,14 @@ services:
     networks:
       - go-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d cart_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cart_service_db"]
       interval: 5s
       timeout: 5s
       retries: 3
-  
-  cart_service:
-    build:
-      context: ./cart
-      dockerfile: Dockerfile
-    container_name: cart_service_backend
-    ports:
-      - "127.0.0.1:8080:8080"
-    depends_on:
-      cart_db:
-        condition: service_healthy
-      stocks_service:
-        condition: service_started
-    env_file:
-      - cart/.env
-  
-  cart_migrator:
-    image: golang:1.24-alpine3.21
-    container_name: cart_migrator
-    working_dir: /app
-    volumes:
-      - ./cart:/app
-    depends_on:
-      cart_db:
-        condition: service_healthy
-    command: >
-      sh -c "go install github.com/pressly/goose/v3/cmd/goose@latest && 
-             goose -dir ./internal/migrations postgres 'postgres://postgres:12345@cart_db:5432/cart_service_db?sslmode=disable' up"
-
-  stocks_migrator:
-    image: golang:1.24-alpine3.21
-    container_name: stocks_migrator
-    working_dir: /app
-    volumes:
-      - ./stocks:/app
-    depends_on:
-      stocks_db:
-        condition: service_healthy
-    command: >
-       sh -c "go install github.com/pressly/goose/v3/cmd/goose@latest &&
-             goose -dir ./internal/migrations postgres 'postgres://postgres:12345@stocks_db:5432/stocks_service_db?sslmode=disable' up"
 
   stocks_db:
     image: postgres:17.5-alpine3.21
-    container_name: stocks_service_db
+    container_name: stocks_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
@@ -75,11 +34,47 @@ services:
     networks:
       - go-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d stocks_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stocks_service_db"]
       interval: 5s
       timeout: 5s
       retries: 3
 
+  stocks_migrator:
+    image: kukymbr/goose-docker:latest
+    container_name: stocks_migrator
+    working_dir: /migrations
+    volumes:
+      - ./stocks/internal/migrations:/migrations
+    depends_on:
+      stocks_db:
+        condition: service_healthy
+    networks:
+      - go-net
+    command: >
+      sh -c "
+      goose -dir=/migrations postgres 
+      'host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable' up"
+
+  cart_service:
+    build:
+      context: ./cart
+      dockerfile: Dockerfile
+    container_name: cart_service_backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      cart_db:
+        condition: service_healthy
+      stocks_service:
+        condition: service_started
+      #cart_migrator:
+       # condition: service_completed_successfully
+    env_file:
+      - cart/.env
+    networks:
+      - go-net
+    restart: unless-stopped
+  
   stocks_service:
     build:
       context: ./stocks
@@ -92,7 +87,11 @@ services:
         condition: service_healthy
     env_file:
       - stocks/.env
+    networks:
+      - go-net
+    restart: unless-stopped
 
+ 
 networks:
   go-net:
     driver: bridge
