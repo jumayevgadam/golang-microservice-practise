@@ -12,7 +12,7 @@ services:
       - "127.0.0.1:5435:5432"
     restart: always
     networks:
-      - cart-net
+      - cart-internal-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cart_service_db"]
       interval: 5s
@@ -29,7 +29,7 @@ services:
       cart_db:
         condition: service_healthy
     networks:
-      - cart-net
+      - cart-internal-network
     environment:
       - GOOSE_DRIVER=postgres
       - GOOSE_DBSTRING=host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable
@@ -39,9 +39,7 @@ services:
       'host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable' up"
   
   cart_service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: gadamcuma/cart_service:hw7_v3
     container_name: cart_service_backend
     ports:
       - "127.0.0.1:8080:8080"
@@ -53,12 +51,17 @@ services:
     env_file:
       - .env
     networks:
-      - cart-net
+      - cart-internal-network
+      - shared-network
     restart: unless-stopped
 
 networks:
-  cart-net:
+  cart-internal-network:
     driver: bridge
+  shared-network:
+    external: true
+    name: external-shared-network
 
 volumes:
   cart_db_data:
+

@@ -27,3 +27,4 @@ COPY .env .
 EXPOSE 8080
 
 CMD [ "./cart" ]
+

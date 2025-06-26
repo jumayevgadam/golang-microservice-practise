@@ -2,7 +2,7 @@
 
 ## DOCKER INFORMATION
 - **Image Name**```gadamcuma/cart_service```
-- **Tag**```hw7```
+- **Tag**```hw7_v3```
 - **App Port**```8080```
 
 ## ENVIRONMENT VARIABLES
@@ -14,6 +14,7 @@
 - `HTTP_PORT`: Application port - 8080
 - `READ_TIMEOUT`: HTTP read timeout - 15s
 - `WRITE_TIMEOUT`: HTTP write timeout - 15s
+- `STOCKS_SERVICE_URL`: http://stocks_service_backend:8081
 
 ## API ENDPOINTS
 - `POST /cart/item/add`**Add a new cart item**

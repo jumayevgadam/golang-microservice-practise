@@ -3,8 +3,8 @@ package v1
 import "cart/internal/domain"
 
 type CreateCartItemRequest struct {
-	UserID int64  `json:"user_id" validate:"required"`
-	SkuID  uint32 `json:"sku_id" validate:"required"`
+	UserID int64  `json:"userID" validate:"required"`
+	SkuID  uint32 `json:"skuID" validate:"required"`
 	Count  uint16 `json:"count" validate:"required"`
 }
 
@@ -17,16 +17,16 @@ func (c *CreateCartItemRequest) ToDomain() domain.CartItem {
 }
 
 type DeleteCartItemRequest struct {
-	UserID int64  `json:"user_id" validate:"required"`
-	SkuID  uint32 `json:"sku_id" validate:"required"`
+	UserID int64  `json:"userID" validate:"required"`
+	SkuID  uint32 `json:"skuID" validate:"required"`
 }
 
 type ClearCartItemRequest struct {
-	UserID int64 `json:"user_id" validate:"required"`
+	UserID int64 `json:"userID" validate:"required"`
 }
 
 type ListCartItemsRequest struct {
-	UserID int64 `json:"user_id" validate:"required"`
+	UserID int64 `json:"userID" validate:"required"`
 }
 
 type CartItemResponse struct {
@@ -38,7 +38,7 @@ type CartItemResponse struct {
 
 type ListCartItemsResponse struct {
 	Items      []CartItemResponse `json:"items"`
-	TotalPrice uint32             `json:"total_price"`
+	TotalPrice uint32             `json:"totalPrice"`
 }
 
 func ToCartItemResponse(item domain.StockItemBySKU) CartItemResponse {

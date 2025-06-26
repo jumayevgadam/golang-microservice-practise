@@ -3,8 +3,8 @@ package v1
 import "stocks/internal/domain"
 
 type CreateStockItemRequest struct {
-	UserID   int64  `json:"user_id" validate:"required"`
-	SkuID    uint32 `json:"sku_id" validate:"required"`
+	UserID   int64  `json:"userID" validate:"required"`
+	SkuID    uint32 `json:"skuID" validate:"required"`
 	Count    uint16 `json:"count" validate:"required"`
 	Price    uint32 `json:"price" validate:"required"`
 	Location string `json:"location" validate:"required"`
@@ -24,12 +24,12 @@ func (r *CreateStockItemRequest) ToDomain() domain.StockItem {
 }
 
 type DeleteStockItemRequest struct {
-	UserID int64  `json:"user_id" validate:"required"`
-	SkuID  uint32 `json:"sku_id" validate:"required"`
+	UserID int64  `json:"userID" validate:"required"`
+	SkuID  uint32 `json:"skuID" validate:"required"`
 }
 
 type GetStockItemRequest struct {
-	SkuID uint32 `json:"sku_id" validate:"required"`
+	SkuID uint32 `json:"skuID" validate:"required"`
 }
 
 type GetStockItemResponse struct {

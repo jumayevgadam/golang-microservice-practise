@@ -2,7 +2,7 @@
 
 ## DOCKER INFORMATION
 - **Image Name**```gadamcuma/stocks_service```
-- **Tag**```hw7```
+- **Tag**```hw7_v2```
 - **App Port**```8081```
 
 ## ENVIRONMENT VARIABLES

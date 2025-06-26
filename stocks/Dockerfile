@@ -27,3 +27,4 @@ COPY .env .
 EXPOSE 8081
 
 CMD [ "./stocks" ]
+

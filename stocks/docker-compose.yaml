@@ -12,7 +12,7 @@ services:
       - "127.0.0.1:5434:5432"
     restart: always
     networks:
-      - stocks-net
+      - stocks-internal-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d stocks_service_db"]
       interval: 5s
@@ -29,7 +29,7 @@ services:
       stocks_db:
         condition: service_healthy
     networks:
-      - stocks-net
+      - stocks-internal-network
     environment:
       - GOOSE_DRIVER=postgres
       - GOOSE_DBSTRING=host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable
@@ -39,9 +39,7 @@ services:
       'host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable' up"
   
   stocks_service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: gadamcuma/stocks_service:hw7_v2
     container_name: stocks_service_backend
     ports:
       - "127.0.0.1:8081:8081"
@@ -51,13 +49,17 @@ services:
     env_file:
       - .env
     networks:
-      - stocks-net
+      - stocks-internal-network
+      - shared-network
     restart: unless-stopped
 
  
 networks:
-  stocks-net:
+  stocks-internal-network:
     driver: bridge
+  shared-network:
+    external: true
+    name: external-shared-network
 
 volumes:
   stocks_db_data:
