@@ -20,10 +20,15 @@ func NewStockServiceRepository(psqlDB connection.DB) *stockServiceRepository {
 	return &stockServiceRepository{psqlDB: psqlDB}
 }
 
-func (s *stockServiceRepository) SaveStockItem(ctx context.Context, stockItem domain.StockItem) error {
+func (s *stockServiceRepository) SaveOrUpdateStockItem(ctx context.Context, stockItem domain.StockItem) error {
 	_, err := s.psqlDB.Exec(ctx, `
 		INSERT INTO stock_items (user_id, sku_id, count, price, location)
-		VALUES ($1, $2, $3, $4, $5)`,
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (user_id, sku_id) DO UPDATE SET
+			count = stock_items.count + EXCLUDED.count,
+			price = COALESCE(NULLIF(EXCLUDED.price, 0), stock_items.price),
+			location = COALESCE(NULLIF(EXCLUDED.location, ''), stock_items.location),
+			updated_at = NOW()`,
 		stockItem.UserID, stockItem.Sku.ID, stockItem.Count,
 		stockItem.Price, stockItem.Location,
 	)

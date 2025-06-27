@@ -20,10 +20,13 @@ func NewCartItemRepository(psqlDB connection.DB) *cartServiceRepo {
 	return &cartServiceRepo{psqlDB: psqlDB}
 }
 
-func (c *cartServiceRepo) SaveCartItem(ctx context.Context, cartItem domain.CartItem) error {
+func (c *cartServiceRepo) SaveOrUpdateCartItem(ctx context.Context, cartItem domain.CartItem) error {
 	_, err := c.psqlDB.Exec(ctx, `
 		INSERT INTO cart_items (user_id, sku, count)
-		VALUES ($1, $2, $3)`,
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, sku) DO UPDATE SET
+			count = cart_items.count + EXCLUDED.count,
+			updated_at = NOW()`,
 		cartItem.UserID, cartItem.SkuID, cartItem.Count,
 	)
 	if err != nil {

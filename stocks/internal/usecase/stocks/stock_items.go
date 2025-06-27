@@ -2,7 +2,6 @@ package stocks
 
 import (
 	"context"
-	"errors"
 	"math"
 	"stocks/internal/domain"
 	"stocks/internal/usecase"
@@ -16,9 +15,9 @@ type (
 
 	// StockServiceRepository provides repository methods of stock service.
 	StockServiceRepository interface {
-		SaveStockItem(ctx context.Context, stockItem domain.StockItem) error
+		SaveOrUpdateStockItem(ctx context.Context, stockItem domain.StockItem) error
 		GetStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) (domain.StockItem, error)
-		UpdateStockItem(ctx context.Context, stockItem domain.StockItem) error
+		// UpdateStockItem(ctx context.Context, stockItem domain.StockItem) error
 		DeleteStockItemFromStorage(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error
 		GetStockItemBySku(ct context.Context, skuID domain.SKUID) (domain.StockItem, error)
 		ListStockItemsByLocation(ctx context.Context, filter domain.Filter) ([]domain.StockItem, error)
@@ -49,16 +48,7 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 
 	stockItem.Sku = sku
 
-	_, err = s.GetStockItem(ctx, stockItem.UserID, sku.ID)
-	if err != nil {
-		if errors.Is(err, domain.ErrStockItemNotFound) {
-			return s.SaveStockItem(ctx, stockItem)
-		}
-
-		return err
-	}
-
-	return s.UpdateStockItem(ctx, stockItem)
+	return s.SaveOrUpdateStockItem(ctx, stockItem)
 }
 
 func (s *stockServiceUseCase) DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {

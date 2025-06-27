@@ -42,10 +42,10 @@ type GetStockItemResponse struct {
 }
 
 type FilterRequest struct {
-	UserID      int64  `json:"user_id" validate:"required"`
+	UserID      int64  `json:"userID" validate:"required"`
 	Location    string `json:"location" validate:"required"`
-	PageSize    int64  `json:"page_size" validate:"required,gte=1"`
-	CurrentPage int64  `json:"current_page" validate:"required,gte=1"`
+	PageSize    int64  `json:"pageSize" validate:"required,gte=1"`
+	CurrentPage int64  `json:"currentPage" validate:"required,gte=1"`
 }
 
 func (f *FilterRequest) ToDomain() domain.Filter {

@@ -53,7 +53,6 @@ services:
       - shared-network
     restart: unless-stopped
 
- 
 networks:
   stocks-internal-network:
     driver: bridge
