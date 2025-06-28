@@ -26,9 +26,7 @@ CREATE TABLE IF NOT EXISTS stock_items (
     price BIGINT,
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT unique_user_sku UNIQUE (user_id, sku_id)
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 -- +goose StatementEnd
 
