@@ -49,7 +49,7 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 
 	stockItem.Sku = sku
 
-	_, err = s.GetStockItem(ctx, stockItem.UserID, sku.ID)
+	existingStockItem, err := s.GetStockItem(ctx, stockItem.UserID, stockItem.Sku.ID)
 	if err != nil {
 		if errors.Is(err, domain.ErrStockItemNotFound) {
 			return s.SaveStockItem(ctx, stockItem)
@@ -57,6 +57,8 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 
 		return err
 	}
+
+	stockItem.Count += existingStockItem.Count
 
 	return s.UpdateStockItem(ctx, stockItem)
 }

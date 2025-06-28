@@ -1,0 +1,23 @@
+# STOCKS_SERVICE INFORMATIONS
+
+## DOCKER INFORMATION
+- **Image Name**```gadamcuma/stocks_service```
+- **Tag**```hw7_v2```
+- **App Port**```8081```
+
+## ENVIRONMENT VARIABLES
+- `DB_HOST`: PostgreSQL host - postgres
+- `DB_PORT`: PostgreSQL port - 5433
+- `DB_USER`: Database username - postgres
+- `DB_PASSWORD`: Database password - 12345
+- `DB_NAME`: Database name - stocks_service_db
+- `HTTP_PORT`: Application port - 8081
+- `READ_TIMEOUT`: HTTP read timeout - 15s
+- `WRITE_TIMEOUT`: HTTP write timeout - 15s
+- `STOCK_SERVICE_URL` Stock service url for checking sku - http://stocks_service_backend:8081 
+
+## API ENDPOINTS
+- `POST /stocks/item/add`**Add a new stock item**
+- `POST /stocks/item/delete`**Removes stock item**
+- `POST /stocks/item/get`**Get stock item by SKU**
+- `POST /stocks/list/location`**List stock items by location**

@@ -4,7 +4,6 @@ import (
 	"cart/internal/domain"
 	"cart/internal/usecase"
 	"context"
-	"errors"
 )
 
 type (
@@ -14,8 +13,8 @@ type (
 	}
 	// CartItemRepository interface represent cart items repository logic.
 	CartItemRepository interface {
-		SaveCartItem(ctx context.Context, cartItem domain.CartItem) error
-		UpdateCartItem(ctx context.Context, cartItem domain.CartItem) error
+		SaveOrUpdateCartItem(ctx context.Context, cartItem domain.CartItem) error
+		//UpdateCartItem(ctx context.Context, cartItem domain.CartItem) error
 		RemoveCartItem(ctx context.Context, userID domain.UserID, skuID domain.SkuID) error
 		RemoveAllCartItems(ctx context.Context, userID domain.UserID) error
 		GetCartItemByUserID(ctx context.Context, userID domain.UserID, skuID domain.SkuID) (domain.CartItem, error)
@@ -47,18 +46,7 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 		return domain.ErrInSufficientStockCount
 	}
 
-	existingCartItem, err := u.GetCartItemByUserID(ctx, cartItem.UserID, cartItem.SkuID)
-	if err != nil {
-		if errors.Is(err, domain.ErrCartItemNotFound) {
-			return u.SaveCartItem(ctx, cartItem)
-		}
-
-		return err
-	}
-
-	existingCartItem.Count = cartItem.Count
-
-	return u.UpdateCartItem(ctx, existingCartItem)
+	return u.SaveOrUpdateCartItem(ctx, cartItem)
 }
 
 func (u *cartServiceUseCase) DeleteCartItem(ctx context.Context, userID domain.UserID, skuID domain.SkuID) error {

@@ -19,11 +19,10 @@ INSERT INTO sku (sku_id, name, type) VALUES
 (10101, 'pink-hoody', 'apparel');
 
 CREATE TABLE IF NOT EXISTS stock_items (
+    id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    sku BIGINT NOT NULL,
+    sku_id BIGINT NOT NULL UNIQUE REFERENCES sku (sku_id),
     count BIGINT,
-    name TEXT,
-    type TEXT,
     price BIGINT,
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

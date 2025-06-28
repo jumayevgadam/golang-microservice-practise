@@ -1,0 +1,67 @@
+services:
+  cart_db:
+    image: postgres:17.5-alpine3.21
+    container_name: cart_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: cart_service_db 
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5435:5432"
+    restart: always
+    networks:
+      - cart-internal-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cart_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  cart_migrator:
+    image: kukymbr/goose-docker:3.24.0
+    container_name: cart_migrator
+    working_dir: /migrations
+    volumes:
+      - ./internal/migrations:/migrations
+    depends_on:
+      cart_db:
+        condition: service_healthy
+    networks:
+      - cart-internal-network
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable
+    command: >
+      sh -c "
+      goose -dir=/migrations postgres
+      'host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable' up"
+  
+  cart_service:
+    image: gadamcuma/cart_service:hw7_v3
+    container_name: cart_service_backend
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      cart_db:
+        condition: service_healthy
+      cart_migrator:
+       condition: service_completed_successfully
+    env_file:
+      - .env
+    networks:
+      - cart-internal-network
+      - shared-network
+    restart: unless-stopped
+
+networks:
+  cart-internal-network:
+    driver: bridge
+  shared-network:
+    external: true
+    name: external-shared-network
+
+volumes:
+  cart_db_data:
+

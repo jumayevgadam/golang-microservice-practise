@@ -1,4 +1,4 @@
-package reqvalidator
+package httphelper
 
 import (
 	"encoding/json"

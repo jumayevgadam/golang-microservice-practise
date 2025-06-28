@@ -38,7 +38,7 @@ func NewHTTPStockService(baseURL string) *stockService {
 }
 
 func (s *stockService) GetStockItemBySKU(ctx context.Context, skuID domain.SkuID) (domain.StockItemBySKU, error) {
-	reqBody := map[string]uint32{"sku_id": uint32(skuID)}
+	reqBody := map[string]uint32{"skuID": uint32(skuID)}
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
