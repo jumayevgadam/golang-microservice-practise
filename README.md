@@ -92,3 +92,19 @@ I should be able to pull your image using:
 - Required environment variables (e.g., DB_HOST, DB_PORT, etc.)
 
 - Sample requests or endpoints if available
+
+## Homework 8
+
+### Requirements:
+- Cover the handlers and use cases with unit tests. Minimum coverage: 40%. 
+- Cover the handlers with integration tests. Minimum test cases: successful execution and (receiving an error due to invalid input data or receiving not found error).
+```bash
+  INTEGRATION_TEST=1
+```
+Prepare a Makefile for each service that includes the following commands:
+
+  - starting the test environment using docker-compose, 
+  - running integration tests, 
+  - running unit tests.
+
+After completing all changes, don’t forget to update your Docker Hub images.
