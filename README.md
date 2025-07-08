@@ -93,6 +93,7 @@ I should be able to pull your image using:
 
 - Sample requests or endpoints if available
 
+
 ## Homework 8
 
 ### Requirements:
@@ -108,3 +109,7 @@ Prepare a Makefile for each service that includes the following commands:
   - running unit tests.
 
 After completing all changes, don’t forget to update your Docker Hub images.
+
+
+## Homework 9
+- [Kafka-service](metrics-consumer/README.md)
