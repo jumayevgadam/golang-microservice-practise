@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+//go:generate mkdir -p mock
+//go:generate minimock -o ./mock/ -s .go -g
 type (
 	CartItemUseCase interface {
 		AddCartItem(ctx context.Context, cartItem domain.CartItem) error

@@ -7,12 +7,15 @@ ifeq ($(POSTGRES_SETUP),)
 	POSTGRES_SETUP := user=postgres password=12345 dbname=stock_service_db host=localhost port=5432 sslmode=disable
 endif
 
-.PHONY: build run test clean migration-create migration-up migration-down migration-status migration-reset migration
+.PHONY: build run test clean migration-create migration-up migration-down migration-status migration-reset generate-mock docker-build
 
 build:
 	@echo "Building $(APP_NAME)..."
 	@mkdir -p $(BIN_DIR)
 	@go build -o $(BIN_DIR)/$(APP_NAME) ./cmd/main.go
+
+docker-build:
+	@docker compose up -d --build
 
 run: build
 	@echo "Running $(APP_NAME) on port $(PORT)..."
@@ -39,3 +42,6 @@ migration-down:
 
 migration-reset:
 	@goose -dir $(MIGRATION_DIR) postgres "$(POSTGRES_SETUP)" reset
+
+generate-mock:
+	@go generate ./...

@@ -8,6 +8,8 @@ import (
 	"stocks/internal/usecase"
 )
 
+//go:generate mkdir -p mock
+//go:generate minimock -o ./mock/ -s .go -g
 type (
 	// SKURepository provides repository methods of SKU service.
 	SKURepository interface {
@@ -33,7 +35,10 @@ type stockServiceUseCase struct {
 
 var _ usecase.StockServiceUseCase = (*stockServiceUseCase)(nil)
 
-func NewStockServiceUseCase(skuRepo SKURepository, stockRepo StockServiceRepository) *stockServiceUseCase {
+func NewStockServiceUseCase(
+	skuRepo SKURepository,
+	stockRepo StockServiceRepository,
+) *stockServiceUseCase {
 	return &stockServiceUseCase{
 		SKURepository:          skuRepo,
 		StockServiceRepository: stockRepo,

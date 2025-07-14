@@ -7,8 +7,7 @@ ifeq ($(POSTGRES_SETUP),)
 	POSTGRES_SETUP := user=postgres password=12345 dbname=cart_service_db host=localhost port=5432 sslmode=disable
 endif
 
-
-.PHONY: build run test clean migration-create migration-up migration-down migration-reset
+.PHONY: build run test clean migration-create migration-up migration-down migration-reset docker-run
 
 build:
 	@echo "Building $(APP_NAME)..."
@@ -28,6 +27,8 @@ clean:
 	@rm -rf $(BIN_DIR)
 	@go clean
 
+docker-run:
+	@docker compose up -d --build
 
 migration-create:
 	@mkdir -p $(MIGRATION_DIR)

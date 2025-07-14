@@ -6,6 +6,8 @@ import (
 	"context"
 )
 
+//go:generate mkdir -p mock
+//go:generate minimock -o ./mock/ -s .go -g
 type (
 	// StockService interface represent stock service buisiness logic.
 	StockService interface {
