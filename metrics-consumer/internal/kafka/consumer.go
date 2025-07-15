@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -9,7 +10,7 @@ import (
 
 const (
 	sessionTimeoutMs = 7000
-	noTimeout        = -1
+	timeOut          = 2
 )
 
 type Handler interface {
@@ -48,25 +49,35 @@ func NewConsumer(handler Handler, address string, topic, consumerGroup string) (
 	}, nil
 }
 
-func (c *Consumer) Start() {
+func (c *Consumer) Start(ctx context.Context) {
 	for {
-		kafkaMsg, err := c.consumer.ReadMessage(noTimeout)
-		if err != nil {
-			log.Printf("consumer error: %v\n", err.Error())
-		}
+		select {
+		case <-ctx.Done():
+			log.Println("context cancelled, stopping consumer...")
+			return
+		default:
+			kafkaMsg, err := c.consumer.ReadMessage(timeOut)
+			if err != nil {
+				if kafkaErr, ok := err.(kafka.Error); ok && kafkaErr.Code() != kafka.ErrTimedOut {
+					log.Printf("c.consumer.ReadMessage: error: %v\n", err.Error())
+				}
 
-		if kafkaMsg == nil {
-			continue
-		}
+				continue
+			}
 
-		if err := c.handler.HandleMessage(kafkaMsg.Value, kafkaMsg.TopicPartition.Offset); err != nil {
-			log.Printf("c.handler.HandleMessage: error: %v\n", err.Error())
-			continue
-		}
+			if kafkaMsg == nil {
+				continue
+			}
 
-		if _, err := c.consumer.StoreMessage(kafkaMsg); err != nil {
-			log.Printf("c.consumer.StoreMessage: %v\n", err.Error())
-			continue
+			if err := c.handler.HandleMessage(kafkaMsg.Value, kafkaMsg.TopicPartition.Offset); err != nil {
+				log.Printf("c.handler.HandleMessage: %v\n", err.Error())
+				continue
+			}
+
+			if _, err := c.consumer.StoreMessage(kafkaMsg); err != nil {
+				log.Printf("c.consumer.StoreMessage: %v\n", err.Error())
+				continue
+			}
 		}
 	}
 }

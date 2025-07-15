@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"log"
 	"metrics-consumer/internal/handler"
 	"metrics-consumer/internal/kafka"
@@ -31,8 +32,11 @@ func BootStrapMetricsService(envPath string) error {
 		log.Printf("failed to create metrics consumer service: %v\n", err.Error())
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
-		consumer.Start()
+		consumer.Start(ctx)
 	}()
 
 	sigChan := make(chan os.Signal, 1)

@@ -86,7 +86,7 @@ func (c *StockServiceConfig) DbConfig() PostgresConfig {
 
 func (c *StockServiceConfig) GetKafkaBrokers() string {
 	if c.Kafka.Brokers == "" {
-		return "kafka1:9091,kafka2:9092"
+		return "kafka1:29091,kafka2:29092"
 	}
 
 	return c.Kafka.Brokers
