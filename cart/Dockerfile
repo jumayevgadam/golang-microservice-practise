@@ -16,7 +16,7 @@ RUN go mod download
 COPY .  .
 
 # Build Cart service app
-RUN CGO_ENABLED=1 go build -tags musl -o bin/cart ./cmd/main.go
+RUN go build -tags musl -o bin/cart ./cmd/main.go
 
 # Final stage
 FROM alpine:3.21

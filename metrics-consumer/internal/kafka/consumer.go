@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"fmt"
-	"strings"
+	"log"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
@@ -12,14 +12,19 @@ const (
 	noTimeout        = -1
 )
 
+type Handler interface {
+	HandleMessage(message []byte, topic kafka.Offset) error
+}
+
 type Consumer struct {
 	consumer *kafka.Consumer
+	handler  Handler
 	stop     bool
 }
 
-func NewConsumer(address []string, topic, consumerGroup string) (*Consumer, error) {
+func NewConsumer(handler Handler, address string, topic, consumerGroup string) (*Consumer, error) {
 	config := &kafka.ConfigMap{
-		"bootstrap.servers":        strings.Join(address, ","),
+		"bootstrap.servers":        address,
 		"group.id":                 consumerGroup,
 		"session.timeout.ms":       sessionTimeoutMs,
 		"enable.auto.offset.store": false,
@@ -37,5 +42,40 @@ func NewConsumer(address []string, topic, consumerGroup string) (*Consumer, erro
 		return nil, fmt.Errorf("[metrics-consumer]: c.Subscribe: %w", err)
 	}
 
-	return &Consumer{consumer: c}, nil
+	return &Consumer{
+		consumer: c,
+		handler:  handler,
+	}, nil
+}
+
+func (c *Consumer) Start() {
+	for {
+		kafkaMsg, err := c.consumer.ReadMessage(noTimeout)
+		if err != nil {
+			log.Printf("consumer error: %v\n", err.Error())
+		}
+
+		if kafkaMsg == nil {
+			continue
+		}
+
+		if err := c.handler.HandleMessage(kafkaMsg.Value, kafkaMsg.TopicPartition.Offset); err != nil {
+			log.Printf("c.handler.HandleMessage: error: %v\n", err.Error())
+			continue
+		}
+
+		if _, err := c.consumer.StoreMessage(kafkaMsg); err != nil {
+			log.Printf("c.consumer.StoreMessage: %v\n", err.Error())
+			continue
+		}
+	}
+}
+
+func (c *Consumer) Stop() error {
+	c.stop = true
+	if _, err := c.consumer.Commit(); err != nil {
+		return err
+	}
+
+	return c.consumer.Close()
 }

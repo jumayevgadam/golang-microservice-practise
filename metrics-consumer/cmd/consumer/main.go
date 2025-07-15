@@ -1,12 +1,13 @@
 package main
 
-const (
-	topic         = "metrics-topic"
-	consumerGroup = "kafka-consumer-group"
+import (
+	"log"
+	"metrics-consumer/internal"
 )
 
-var address = []string{"localhost:9091", "localhost:9092"}
-
 func main() {
-	
+	err := internal.BootStrapMetricsService(".env")
+	if err != nil {
+		log.Printf("error building app bootstrapservice: %v\n", err.Error())
+	}
 }
