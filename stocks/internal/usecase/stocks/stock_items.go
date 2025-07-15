@@ -3,8 +3,10 @@ package stocks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"stocks/internal/domain"
+	"stocks/internal/kafka"
 	"stocks/internal/usecase"
 )
 
@@ -31,6 +33,7 @@ type (
 type stockServiceUseCase struct {
 	SKURepository
 	StockServiceRepository
+	KafkaProducer kafka.StocksEventProducer
 }
 
 var _ usecase.StockServiceUseCase = (*stockServiceUseCase)(nil)
@@ -38,10 +41,12 @@ var _ usecase.StockServiceUseCase = (*stockServiceUseCase)(nil)
 func NewStockServiceUseCase(
 	skuRepo SKURepository,
 	stockRepo StockServiceRepository,
+	kafkaProducer kafka.StocksEventProducer,
 ) *stockServiceUseCase {
 	return &stockServiceUseCase{
 		SKURepository:          skuRepo,
 		StockServiceRepository: stockRepo,
+		KafkaProducer:          kafkaProducer,
 	}
 }
 
@@ -57,7 +62,16 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 	existingStockItem, err := s.GetStockItem(ctx, stockItem.UserID, stockItem.Sku.ID)
 	if err != nil {
 		if errors.Is(err, domain.ErrStockItemNotFound) {
-			return s.SaveStockItem(ctx, stockItem)
+			err = s.SaveStockItem(ctx, stockItem)
+			if err != nil {
+				return err
+			}
+
+			s.KafkaProducer.ProduceSKUCreated(ctx, kafka.SKUCreatedAndStockChangedPayload{
+				SKU:   fmt.Sprintf("%d", stockItem.Sku.ID),
+				Count: stockItem.Count,
+				Price: stockItem.Price,
+			})
 		}
 
 		return err
@@ -65,7 +79,18 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 
 	stockItem.Count += existingStockItem.Count
 
-	return s.UpdateStockItem(ctx, stockItem)
+	err = s.UpdateStockItem(ctx, stockItem)
+	if err != nil {
+		return err
+	}
+
+	s.KafkaProducer.ProduceStockChanged(ctx, kafka.SKUCreatedAndStockChangedPayload{
+		SKU:   fmt.Sprintf("%d", stockItem.Sku.ID),
+		Count: stockItem.Count,
+		Price: stockItem.Price,
+	})
+
+	return nil
 }
 
 func (s *stockServiceUseCase) DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {

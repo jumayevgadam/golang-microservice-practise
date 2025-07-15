@@ -5,6 +5,8 @@ const (
 	consumerGroup = "kafka-consumer-group"
 )
 
-func main() {
+var address = []string{"localhost:9091", "localhost:9092"}
 
+func main() {
+	
 }

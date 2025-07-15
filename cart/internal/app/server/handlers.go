@@ -16,7 +16,7 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	stockService := stockms.NewHTTPStockService(s.cfg.StockServiceURL())
 
 	// usecases.
-	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo)
+	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo, s.kafkaProducer)
 
 	// handlers.
 	handlers := &v1.Handlers{

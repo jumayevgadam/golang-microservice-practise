@@ -11,4 +11,5 @@ func BootStrapMetricsService() error {
 		log.Println("kafka brokers not set")
 	}
 
+	return nil
 }

@@ -18,12 +18,14 @@ type Config interface {
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
+	GetKafkaBrokers() string
 }
 
 type CartServiceConfig struct {
 	Server           ServerConfig
 	Postgres         PostgresConfig
 	ExternalServices ExternalServicesConfig
+	Kafka            KafkaServiceConfig
 }
 
 type (
@@ -44,6 +46,10 @@ type (
 	// ExternalServicesConfig holds ExternalServices configurations which need in stock service.
 	ExternalServicesConfig struct {
 		StockServiceURL string `env:"STOCK_SERVICE_URL,required"`
+	}
+	// KafkaServiceConfig holds needed configurations for cart service.
+	KafkaServiceConfig struct {
+		Brokers string `env:"KAFKA_BROKERS,required"`
 	}
 )
 
@@ -82,6 +88,14 @@ func (c *CartServiceConfig) DbConfig() PostgresConfig {
 
 func (c *CartServiceConfig) StockServiceURL() string {
 	return c.ExternalServices.StockServiceURL
+}
+
+func (c *CartServiceConfig) GetKafkaBrokers() string {
+	if c.Kafka.Brokers == "" {
+		return "kafka1:9091,kafka2:9092"
+	}
+
+	return c.Kafka.Brokers
 }
 
 // GenerateDSN returns a psql url.

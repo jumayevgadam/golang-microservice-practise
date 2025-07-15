@@ -6,6 +6,7 @@ require github.com/joho/godotenv v1.5.1
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gojuno/minimock/v3 v3.4.5

@@ -13,7 +13,7 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	stockRepo := postgres.NewStockServiceRepository(s.psqlDB)
 
 	// initialize usecase.
-	stockUC := stocks.NewStockServiceUseCase(skuRepo, stockRepo)
+	stockUC := stocks.NewStockServiceUseCase(skuRepo, stockRepo, s.kafkaProducer)
 
 	// initialize handlers.
 	handlers := &v1.Handlers{

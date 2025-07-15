@@ -2,8 +2,10 @@ package carts
 
 import (
 	"cart/internal/domain"
+	"cart/internal/kafka"
 	"cart/internal/usecase"
 	"context"
+	"fmt"
 )
 
 //go:generate mkdir -p mock
@@ -27,14 +29,20 @@ type (
 type cartServiceUseCase struct {
 	StockService
 	CartItemRepository
+	KafkaProducer kafka.CartEventProducer
 }
 
 var _ usecase.CartItemUseCase = (*cartServiceUseCase)(nil)
 
-func NewCartServiceUseCase(stockService StockService, cartItemRepo CartItemRepository) *cartServiceUseCase {
+func NewCartServiceUseCase(
+	stockService StockService,
+	cartItemRepo CartItemRepository,
+	kafkaProducer kafka.CartEventProducer,
+) *cartServiceUseCase {
 	return &cartServiceUseCase{
 		StockService:       stockService,
 		CartItemRepository: cartItemRepo,
+		KafkaProducer:      kafkaProducer,
 	}
 }
 
@@ -44,9 +52,26 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 		return err
 	}
 
+	// prepare cart item addedpayload for producing event.
+	payload := kafka.CartItemAddedPayload{
+		CartID: fmt.Sprintf("%d", cartItem.UserID), // assuming userID is cartID.
+		SKU:    uint32(cartItem.SkuID),
+		Count:  uint16(cartItem.Count),
+		Status: "success",
+	}
+
 	if cartItem.Count > stockItemBySKU.Count {
+		u.KafkaProducer.ProduceCartItemFailed(ctx, kafka.CartItemFailedPayload{
+			CartID: fmt.Sprintf("%d", cartItem.UserID),
+			SKU:    uint32(cartItem.SkuID),
+			Count:  uint16(cartItem.Count),
+			Status: "failed",
+			Reason: "not enough stock",
+		})
 		return domain.ErrInSufficientStockCount
 	}
+
+	u.KafkaProducer.ProduceCartItemAdded(ctx, payload)
 
 	return u.SaveOrUpdateCartItem(ctx, cartItem)
 }
