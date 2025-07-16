@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"stocks/internal/config"
+	"stocks/internal/kafka"
 	"stocks/pkg/connection"
 	"stocks/pkg/constants"
 	"syscall"
@@ -16,20 +17,23 @@ import (
 
 // Server represent server configurations for this stocks service.
 type Server struct {
-	server *http.Server
-	cfg    config.Config
-	psqlDB connection.DB
+	server        *http.Server
+	cfg           config.Config
+	psqlDB        connection.DB
+	kafkaProducer kafka.StocksEventProducer
 }
 
 // NewServer creates and returns a new instance of Server.
 func NewServer(
 	cfg config.Config,
 	psqlDB connection.DB,
+	kafkaProducer kafka.StocksEventProducer,
 ) *Server {
 	return &Server{
-		server: nil,
-		cfg:    cfg,
-		psqlDB: psqlDB,
+		server:        nil,
+		cfg:           cfg,
+		psqlDB:        psqlDB,
+		kafkaProducer: kafkaProducer,
 	}
 }
 

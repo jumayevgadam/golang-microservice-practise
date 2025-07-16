@@ -2,6 +2,7 @@ package server
 
 import (
 	"cart/internal/config"
+	"cart/internal/kafka"
 	"cart/pkg/connection"
 	"cart/pkg/constants"
 	"context"
@@ -15,19 +16,22 @@ import (
 )
 
 type Server struct {
-	server *http.Server
-	cfg    config.Config
-	psqlDB connection.DB
+	server        *http.Server
+	cfg           config.Config
+	psqlDB        connection.DB
+	kafkaProducer kafka.CartEventProducer
 }
 
 func NewServer(
 	cfg config.Config,
 	psqlDB connection.DB,
+	kafkaProducer kafka.CartEventProducer,
 ) *Server {
 	return &Server{
-		server: nil,
-		cfg:    cfg,
-		psqlDB: psqlDB,
+		server:        nil,
+		cfg:           cfg,
+		psqlDB:        psqlDB,
+		kafkaProducer: kafkaProducer,
 	}
 }
 

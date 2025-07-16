@@ -6,8 +6,10 @@ import (
 	"log"
 	"stocks/internal/app/server"
 	"stocks/internal/config"
+	"stocks/internal/kafka"
 	"stocks/pkg/connection"
 	"stocks/pkg/constants"
+	"strings"
 	"time"
 )
 
@@ -38,7 +40,13 @@ func NewStockServiceApp() error {
 		log.Println("postgres connection successfully completed")
 	}()
 
-	srv := server.NewServer(cfg, psqlDB)
+	kafkaProducer, err := kafka.NewStocksServiceEventProducer(strings.Split(cfg.GetKafkaBrokers(), ","))
+	if err != nil {
+		log.Printf("failed to create stocks service kafka producer: %v\n", err)
+	}
+	defer kafkaProducer.Close()
+
+	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
 	if err := srv.RunHTTPServer(); err != nil {
 		log.Printf("%+v\n", err.Error())
 		return fmt.Errorf("failed to run http server: %w", err)

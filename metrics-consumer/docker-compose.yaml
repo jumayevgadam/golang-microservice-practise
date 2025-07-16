@@ -1,0 +1,13 @@
+services:
+  metrics-consumer:
+    image: gadamcuma/metrics-consumer:hw9
+    container_name: metrics_consumer_backend
+    env_file:
+      - .env
+    networks:
+      - external-shared-network
+
+networks:
+  external-shared-network:
+    external: true
+  

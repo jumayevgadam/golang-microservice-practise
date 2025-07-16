@@ -17,12 +17,14 @@ type Config interface {
 	Address() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
+	GetKafkaBrokers() string
 }
 
 type StockServiceConfig struct {
 	Server           ServerConfig
 	Postgres         PostgresConfig
 	ExternalServices ExternalServicesConfig
+	Kafka            KafkaServiceConfig
 }
 
 type (
@@ -42,6 +44,11 @@ type (
 	}
 	// ExternalServicesConfig holds ExternalServices configurations which need in stock service.
 	ExternalServicesConfig struct{}
+
+	// KafkaServiceConfig holds needed configurations for stock service event producer.
+	KafkaServiceConfig struct {
+		Brokers string `env:"KAFKA_BROKERS,required"`
+	}
 )
 
 // LoadEnv load environment variables.
@@ -75,6 +82,14 @@ func (c *StockServiceConfig) SrvConfig() ServerConfig {
 // DbConfig returns the postgresql configuration.
 func (c *StockServiceConfig) DbConfig() PostgresConfig {
 	return c.Postgres
+}
+
+func (c *StockServiceConfig) GetKafkaBrokers() string {
+	if c.Kafka.Brokers == "" {
+		return "kafka1:29091,kafka2:29092"
+	}
+
+	return c.Kafka.Brokers
 }
 
 // GenerateDSN returns a psql url.

@@ -15,22 +15,18 @@ RUN go mod download
 # Copy Source code
 COPY .  .
 
-# Build Cart service app
-RUN go build -tags musl -o bin/stocks ./cmd/main.go
+RUN go build -tags musl -o metrics ./cmd/consumer/main.go
 
-# Final stage
 FROM alpine:3.21
 
 WORKDIR /root
 
-RUN apk add --no-cache
+RUN apk add --no-cache 
 
-# Copy binary from builder stage
-COPY --from=builder /app/bin/stocks .
+COPY --from=builder /app/metrics .
 
 COPY .env .
 
-EXPOSE 8081
+CMD [ "./metrics" ]
 
-CMD [ "./stocks" ]
 

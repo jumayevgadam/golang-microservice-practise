@@ -3,11 +3,13 @@ package app
 import (
 	"cart/internal/app/server"
 	"cart/internal/config"
+	"cart/internal/kafka"
 	"cart/pkg/connection"
 	"cart/pkg/constants"
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -35,7 +37,13 @@ func NewCartServiceApp() error {
 		log.Println("postgres connection successfully completed")
 	}()
 
-	srv := server.NewServer(cfg, psqlDB)
+	kafkaProducer, err := kafka.NewCartServiceProducer(strings.Split(cfg.GetKafkaBrokers(), ","))
+	if err != nil {
+		log.Printf("failed to initialize cart service kafka producer: %v\n", err.Error())
+	}
+	defer kafkaProducer.Close()
+
+	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
 	if err := srv.RunHTTPServer(); err != nil {
 		log.Printf("%+v\n", err.Error())
 		return fmt.Errorf("can not start http server: %w", err)

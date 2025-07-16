@@ -5,6 +5,8 @@ import (
 	"stocks/internal/domain"
 )
 
+//go:generate mkdir -p mock
+//go:generate minimock -o ./mock/ -s .go -g
 type (
 	// StockServiceUseCase represent stock service usecase methods.
 	StockServiceUseCase interface {
