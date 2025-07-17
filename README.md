@@ -113,3 +113,93 @@ After completing all changes, don’t forget to update your Docker Hub images.
 
 ## Homework 9
 - [Kafka-service](metrics-consumer/README.md)
+
+## Homework 10
+
+### ✅ Task Overview
+
+- Replacing all HTTP handlers with **gRPC** service definitions.
+- Compatible with tools like [grpcui](https://github.com/fullstorydev/grpcui).
+- (Bonus) Adding **gRPC-Gateway** support to allow access via both **HTTP/REST** and **gRPC** clients.
+
+### 🧱 Project Structure
+
+```
+.
+├── pkg/
+│   └── api/                     # Generated gRPC & Gateway code
+│       ├── service.proto
+|       |   service.pb.go
+│       ├── service_grpc.pb.go
+│       └── service.pb.gw.go
+├── internal/
+│   ├── service/                 # Business logic
+│   └── server/
+│       ├── grpc.go              # gRPC server setup
+│       └── gateway.go           # gRPC-Gateway HTTP server setup
+├── cmd/
+│   └── main.go                  # Entrypoint
+├── go.mod
+└── README.md                    # You are here
+```
+
+### 🧪 How to Generate Code from `.proto`
+
+Install protoc plugins if not already:
+
+```bash
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+```
+
+Then generate the code:
+
+```bash
+protoc -I proto \
+  --go_out=pkg/api --go_opt=paths=source_relative \
+  --go-grpc_out=pkg/api --go-grpc_opt=paths=source_relative \
+  --grpc-gateway_out=pkg/api --grpc-gateway_opt=paths=source_relative \
+  proto/service.proto
+```
+
+
+### 🧰 Testing the Service
+
+### gRPC Call (CLI)
+
+```bash
+grpcurl -plaintext localhost:9090 list
+```
+
+### Bonus HTTP Call (REST via gRPC-Gateway)
+
+```bash
+curl "http://localhost:8080/v1/data?id=123"
+```
+
+### UI Test (gRPC UI)
+
+```bash
+grpcui -plaintext localhost:9090
+```
+
+Then open the browser at: [http://localhost:8080](http://localhost:9090)
+
+### 🧾 Notes
+
+- All proto definitions and generated Go code are stored in `pkg/api/`.
+- This project supports both gRPC and REST clients.
+- Fully testable with [grpcurl](https://github.com/fullstorydev/grpcurl) and [grpcui](https://github.com/fullstorydev/grpcui).
+
+
+### 🐳 Docker Instructions
+
+Make sure to rebuild your Docker images after applying the gRPC and gRPC-Gateway changes:
+
+```bash
+# Example Docker build for the service
+docker build -t service_name:hw10 .
+```
+
+> ⚠️ Don’t forget to update your Dockerfile to install.
