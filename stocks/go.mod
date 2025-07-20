@@ -11,6 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gojuno/minimock/v3 v3.4.5
 	github.com/jackc/pgx/v5 v5.7.5
+	google.golang.org/grpc v1.64.1
 )
 
 require (
@@ -29,4 +30,6 @@ require (
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )

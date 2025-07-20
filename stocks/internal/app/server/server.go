@@ -13,11 +13,14 @@ import (
 	"stocks/pkg/constants"
 	"syscall"
 	"time"
+
+	"google.golang.org/grpc"
 )
 
 // Server represent server configurations for this stocks service.
 type Server struct {
 	server        *http.Server
+	grpcServer    *grpc.Server
 	cfg           config.Config
 	psqlDB        connection.DB
 	kafkaProducer kafka.StocksEventProducer
