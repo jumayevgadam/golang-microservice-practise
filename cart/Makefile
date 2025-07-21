@@ -6,8 +6,9 @@ MIGRATION_DIR := $(CURDIR)/internal/migrations
 ifeq ($(POSTGRES_SETUP),)
 	POSTGRES_SETUP := user=postgres password=12345 dbname=cart_service_db host=localhost port=5432 sslmode=disable
 endif
+LOCAL_BIN=$(CURDIR)/bin
 
-.PHONY: build run test clean migration-create migration-up migration-down migration-reset docker-run
+.PHONY: build run test clean migration-create migration-up migration-down migration-reset docker-run install-deps vendor-proto get-deps generate-abstract-proto generate-cart-proto
 
 build:
 	@echo "Building $(APP_NAME)..."
@@ -42,3 +43,37 @@ migration-down:
 
 migration-reset:
 	@goose -dir $(MIGRATION_DIR) postgres "$(POSTGRES_SETUP)" reset
+
+install-deps:
+	@mkdir -p $(LOCAL_BIN)
+	@GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+	@GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	@GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+vendor-proto:
+	@if [ ! -d vendor.protogen/google ]; then \
+		git clone https://github.com/googleapis/googleapis vendor.protogen/googleapis && \
+		mkdir -p vendor.protogen/google/ && \
+		mv vendor.protogen/googleapis/google/api vendor.protogen/google && \
+		rm -rf vendor.protogen/googleapis; \
+	fi
+
+get-deps:
+	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
+	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+
+generate-abstract-proto: 
+	@mkdir -p pkg/api/abstract
+	@protoc --proto_path=api/abstract --proto_path=vendor.protogen \
+ 		--go_out=pkg/api/abstract --go_opt=paths=source_relative \
+ 		--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
+ 		api/abstract/abstract.proto
+
+generate-cart-proto:
+	@mkdir -p pkg/api/cart
+	@protoc --proto_path=api/cart --proto_path=vendor.protogen \
+		--go_out=pkg/api --go_opt=paths=source_relative \
+		--go-grpc_out=pkg/api --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=pkg/api --grpc-gateway_opt=paths=source_relative \
+		api/cart/cart_v1.proto
