@@ -51,10 +51,11 @@ install-deps:
 	@GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
 vendor-proto:
-	@if [ ! -d vendor.protogen/google ]; then \
-		git clone https://github.com/googleapis/googleapis vendor.protogen/googleapis && \
-		mkdir -p vendor.protogen/google/ && \
-		mv vendor.protogen/googleapis/google/api vendor.protogen/google && \
+	@if [ ! -d vendor.protogen/google/api ]; then \
+		echo "Cloning googleapis..."; \
+		git clone --depth=1 https://github.com/googleapis/googleapis.git vendor.protogen/googleapis; \
+		mkdir -p vendor.protogen/google; \
+		mv vendor.protogen/googleapis/google vendor.protogen/; \
 		rm -rf vendor.protogen/googleapis; \
 	fi
 

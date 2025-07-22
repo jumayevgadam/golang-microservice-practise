@@ -15,7 +15,7 @@ func (r *CreateStockItemRequest) ToDomain() domain.StockItem {
 	return domain.StockItem{
 		UserID: domain.UserID(r.UserID),
 		Sku: domain.SKU{
-			ID: domain.SKUID(r.SkuID),
+			ID: domain.SKUID(r.SkuID),			
 		},
 		Count:    r.Count,
 		Price:    r.Price,

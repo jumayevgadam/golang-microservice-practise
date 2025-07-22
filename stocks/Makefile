@@ -8,7 +8,7 @@ ifeq ($(POSTGRES_SETUP),)
 endif
 LOCAL_BIN=$(CURDIR)/bin
 
-.PHONY: build run test clean migration-create migration-up migration-down migration-status migration-reset generate-mock docker-build install-deps vendor-proto get-deps generate-abstract-proto generate-stocks-proto
+.PHONY: build run test clean migration-create migration-up migration-down migration-status migration-reset generate-mock docker-build install-deps vendor-proto get-deps generate-stocks-proto
 
 build:
 	@echo "Building $(APP_NAME)..."
@@ -54,10 +54,11 @@ install-deps:
 	@GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
 vendor-proto:
-	@if [ ! -d vendor.protogen/google ]; then \
-		git clone https://github.com/googleapis/googleapis vendor.protogen/googleapis && \
-		mkdir -p vendor.protogen/google/ && \
-		mv vendor.protogen/googleapis/google/api vendor.protogen/google && \
+	@if [ ! -d vendor.protogen/google/api ]; then \
+		echo "Cloning googleapis..."; \
+		git clone --depth=1 https://github.com/googleapis/googleapis.git vendor.protogen/googleapis; \
+		mkdir -p vendor.protogen/google; \
+		mv vendor.protogen/googleapis/google vendor.protogen/; \
 		rm -rf vendor.protogen/googleapis; \
 	fi
 
@@ -66,17 +67,12 @@ get-deps:
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
 
-generate-abstract-proto: 
-	@mkdir -p pkg/api/abstract
-	@protoc --proto_path=api/abstract --proto_path=vendor.protogen \
- 		--go_out=pkg/api/abstract --go_opt=paths=source_relative \
- 		--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
- 		api/abstract/abstract.proto
-
 generate-stocks-proto:
 	@mkdir -p pkg/api/stocks
-	@protoc --proto_path=api/stocks --proto_path=vendor.protogen \
-		--go_out=pkg/api --go_opt=paths=source_relative \
-		--go-grpc_out=pkg/api --go-grpc_opt=paths=source_relative \
-		--grpc-gateway_out=pkg/api --grpc-gateway_opt=paths=source_relative \
-		api/stocks/stocks_v1.proto
+	@protoc \
+		-I proto \
+		-I ./stocks/vendor.protogen \
+		--go_out=stocks/pkg/api/stocks --go_opt=paths=source_relative \
+		--go-grpc_out=stocks/pkg/api/stocks --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=stocks/pkg/api/stocks --grpc-gateway_opt=paths=source_relative \
+		proto/stocks.proto

@@ -4,4 +4,5 @@ use (
 	./cart
 	./stocks
 	./metrics-consumer
+	./proto
 )
