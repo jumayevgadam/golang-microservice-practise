@@ -15,9 +15,14 @@ func RequestValidate(r *http.Request, data interface{}) error {
 		return fmt.Errorf("failed to decode request body: %w", err)
 	}
 
-	if err := validate.Struct(data); err != nil {
+	if err := ValidateRequest(data); err != nil {
 		return fmt.Errorf("failed to validate request body: %w", err)
 	}
 
 	return nil
+}
+
+// ValidateRequest need for both services, grpc and http.
+func ValidateRequest(data interface{}) error {
+	return validate.Struct(data)
 }

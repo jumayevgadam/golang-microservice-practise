@@ -15,6 +15,7 @@ var _ Config = (*StockServiceConfig)(nil)
 // Config interface provides methods to a retrieve a configuration values for stocks service.
 type Config interface {
 	Address() string
+	GRPCAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	GetKafkaBrokers() string
@@ -31,6 +32,7 @@ type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
 		HTTPPort     string        `env:"HTTP_PORT,required"`
+		GRPCPORT     string        `env:"GRPC_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -73,6 +75,10 @@ func NewStockServiceConfig() (*StockServiceConfig, error) {
 // Address returns the server address in format host:port.
 func (c *StockServiceConfig) Address() string {
 	return net.JoinHostPort("", c.Server.HTTPPort)
+}
+
+func (c *StockServiceConfig) GRPCAddress() string {
+	return net.JoinHostPort("", c.Server.GRPCPORT)
 }
 
 func (c *StockServiceConfig) SrvConfig() ServerConfig {

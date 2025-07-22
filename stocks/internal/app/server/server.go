@@ -3,18 +3,26 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
+	"time"
+
 	"stocks/internal/config"
 	"stocks/internal/kafka"
+	pb "stocks/pkg/api/stocks"
 	"stocks/pkg/connection"
 	"stocks/pkg/constants"
 	"syscall"
-	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 // Server represent server configurations for this stocks service.
@@ -40,40 +48,116 @@ func NewServer(
 	}
 }
 
-// RunHTTPServer starts http server in goroutines and gracefully shutdown if signal catches.
-func (s *Server) RunHTTPServer() error {
-	// setup routes.
-	mux := s.setupRoutes()
+// RunServer starts http and grpc server in goroutines and gracefully shutdown if signal catches.
+func (s *Server) RunServer() error {
+	var wg sync.WaitGroup
 
-	s.server = &http.Server{
-		Addr:         s.cfg.Address(),
-		Handler:      mux,
-		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
-		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
-	}
+	errChan := make(chan error, 2)
 
+	// start grpc server.
+	wg.Add(1)
 	go func() {
-		log.Printf("server starting on %+v\n", s.cfg.Address())
+		defer wg.Done()
+		if err := s.runGRPCServer(); err != nil {
+			errChan <- fmt.Errorf("runGRPCServer: %w", err)
+		}
+	}()
 
-		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("s.server.ListenAndServe: %v", err.Error())
+	// start grpc-gateway server.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.runGatewayServer(); err != nil {
+			errChan <- fmt.Errorf("runGatewayServer: %w", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	<-quit
-	log.Println("shutting down server...")
+	// wait for a signal or an error from the servers.
+	select {
+	case <-quit:
+		log.Println("shutting down server...")
+	case err := <-errChan:
+		log.Printf("Server error: %v", err.Error())
+	}
 
+	// Create context for shutdown
 	ctxTimeOut, cancel := context.WithTimeout(context.Background(), constants.SrvTimeOut*time.Second)
 	defer cancel()
 
-	if err := s.server.Shutdown(ctxTimeOut); err != nil {
-		log.Printf("s.server.Shutdown: %+v", err.Error())
+	// shutdown http server.
+	if s.server != nil {
+		if err := s.server.Shutdown(ctxTimeOut); err != nil {
+			log.Printf("s.server.Shutdown: %v", err.Error())
+		}
 	}
 
-	log.Println("stock service successfully shutdown")
+	// Shutdown gRPC server.
+	if s.grpcServer != nil {
+		s.grpcServer.GracefulStop()
+	}
+
+	wg.Wait()
+
+	log.Println("stock service successfully shut down...")
+
+	return nil
+}
+
+func (s *Server) runGRPCServer() error {
+	lis, err := net.Listen("tcp", s.cfg.GRPCAddress())
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", s.cfg.GRPCAddress(), err)
+	}
+	defer lis.Close()
+	// create a grpc server.
+	s.grpcServer = grpc.NewServer()
+	// enable reflection for grpcui.
+	s.registerGRPCServices()
+	reflection.Register(s.grpcServer)
+
+	log.Printf("grpc Server starting on %s", s.cfg.GRPCAddress())
+	if err := s.grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("failed to serve stock service gRPC: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Server) runGatewayServer() error {
+	// create a context for a gateway.
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// create grpc-gateway mux.
+	mux := runtime.NewServeMux()
+
+	grpcEndpoint := s.cfg.GRPCAddress()
+
+	// register gRPC-gateway handlers.
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	err := pb.RegisterStocksServiceHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+	if err != nil {
+		return fmt.Errorf("failed to register gateway handler: %w", err)
+	}
+
+	httpMux := s.setupRoutes()
+
+	s.server = &http.Server{
+		Addr:         s.cfg.Address(),
+		Handler:      httpMux,
+		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
+		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
+	}
+
+	log.Printf("Gateway server starting on %s", s.cfg.Address())
+	if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("failed to serve gateway: %w", err)
+	}
 
 	return nil
 }

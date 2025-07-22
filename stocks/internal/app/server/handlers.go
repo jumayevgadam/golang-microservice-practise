@@ -2,9 +2,11 @@ package server
 
 import (
 	"net/http"
-	v1 "stocks/internal/controller/http/v1"
+	grpcV1 "stocks/internal/controller/grpc/v1"
+	httpV1 "stocks/internal/controller/http/v1"
 	"stocks/internal/repository/postgres"
-	"stocks/internal/usecase/stocks"
+	stockUC "stocks/internal/usecase/stocks"
+	pb "stocks/pkg/api/stocks"
 )
 
 func (s *Server) setupRoutes() *http.ServeMux {
@@ -13,12 +15,25 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	stockRepo := postgres.NewStockServiceRepository(s.psqlDB)
 
 	// initialize usecase.
-	stockUC := stocks.NewStockServiceUseCase(skuRepo, stockRepo, s.kafkaProducer)
+	stockUC := stockUC.NewStockServiceUseCase(skuRepo, stockRepo, s.kafkaProducer)
 
 	// initialize handlers.
-	handlers := &v1.Handlers{
-		StockServiceHandler: v1.NewstockServiceController(stockUC),
+	handlers := &httpV1.Handlers{
+		StockServiceHandler: httpV1.NewstockServiceController(stockUC),
 	}
 
-	return v1.MapRoutes(handlers)
+	return httpV1.MapRoutes(handlers)
+}
+
+func (s *Server) registerGRPCServices() {
+	// initialize repository.
+	skuRepo := postgres.NewSKURepository(s.psqlDB)
+	stockRepo := postgres.NewStockServiceRepository(s.psqlDB)
+
+	// initialize usecase.
+	stockUC := stockUC.NewStockServiceUseCase(skuRepo, stockRepo, s.kafkaProducer)
+
+	stockGRPCHandler := grpcV1.NewStockGRPCHandler(stockUC)
+
+	pb.RegisterStocksServiceServer(s.grpcServer, stockGRPCHandler)
 }

@@ -14,14 +14,14 @@ service CartService {
 
     rpc DeleteCartItem (RemoveCartItemRequest) returns (GeneralResponse) {
         option (google.api.http) = {
-            post: "/cart/clear"
+            post: "/cart/item/delete"
             body: "*"
         };
     }
 
-    rpc ClearCartItems (GetCartItemRequest) returns (CartItemResponse) {
+    rpc ClearCartItems (ClearCartItemRequest) returns (GeneralResponse) {
         option (google.api.http) = {
-            post: "/cart/item/get"
+            post: "/cart/clear"
             body: "*"
         };
     }
@@ -50,9 +50,8 @@ message RemoveCartItemRequest {
     uint32 sku_id = 2;
 }
 
-message GetCartItemRequest {
+message ClearCartItemRequest {
     int64 user_id = 1;
-    uint32 sku_id = 2;
 }
 
 message ListCartItemsRequest {
