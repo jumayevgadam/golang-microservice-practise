@@ -186,28 +186,27 @@ func (x *RemoveCartItemRequest) GetSkuId() uint32 {
 	return 0
 }
 
-type GetCartItemRequest struct {
+type ClearCartItemRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	SkuId         uint32                 `protobuf:"varint,2,opt,name=sku_id,json=skuId,proto3" json:"sku_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetCartItemRequest) Reset() {
-	*x = GetCartItemRequest{}
+func (x *ClearCartItemRequest) Reset() {
+	*x = ClearCartItemRequest{}
 	mi := &file_cart_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetCartItemRequest) String() string {
+func (x *ClearCartItemRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetCartItemRequest) ProtoMessage() {}
+func (*ClearCartItemRequest) ProtoMessage() {}
 
-func (x *GetCartItemRequest) ProtoReflect() protoreflect.Message {
+func (x *ClearCartItemRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_cart_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -219,21 +218,14 @@ func (x *GetCartItemRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetCartItemRequest.ProtoReflect.Descriptor instead.
-func (*GetCartItemRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClearCartItemRequest.ProtoReflect.Descriptor instead.
+func (*ClearCartItemRequest) Descriptor() ([]byte, []int) {
 	return file_cart_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetCartItemRequest) GetUserId() int64 {
+func (x *ClearCartItemRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
-	}
-	return 0
-}
-
-func (x *GetCartItemRequest) GetSkuId() uint32 {
-	if x != nil {
-		return x.SkuId
 	}
 	return 0
 }
@@ -417,10 +409,9 @@ const file_cart_proto_rawDesc = "" +
 	"\x05count\x18\x03 \x01(\rR\x05count\"G\n" +
 	"\x15RemoveCartItemRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x15\n" +
-	"\x06sku_id\x18\x02 \x01(\rR\x05skuId\"D\n" +
-	"\x12GetCartItemRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x15\n" +
 	"\x06sku_id\x18\x02 \x01(\rR\x05skuId\"/\n" +
+	"\x14ClearCartItemRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"/\n" +
 	"\x14ListCartItemsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"i\n" +
 	"\x10CartItemResponse\x12\x15\n" +
@@ -431,11 +422,11 @@ const file_cart_proto_rawDesc = "" +
 	"\x15ListCartItemsResponse\x12'\n" +
 	"\x05items\x18\x01 \x03(\v2\x11.CartItemResponseR\x05items\x12\x1f\n" +
 	"\vtotal_price\x18\x02 \x01(\rR\n" +
-	"totalPrice2\xe1\x02\n" +
+	"totalPrice2\xe5\x02\n" +
 	"\vCartService\x12R\n" +
-	"\vAddCartItem\x12\x16.CreateCartItemRequest\x1a\x10.GeneralResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/cart/item/add\x12R\n" +
-	"\x0eDeleteCartItem\x12\x16.RemoveCartItemRequest\x1a\x10.GeneralResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/cart/clear\x12S\n" +
-	"\x0eClearCartItems\x12\x13.GetCartItemRequest\x1a\x11.CartItemResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/cart/item/get\x12U\n" +
+	"\vAddCartItem\x12\x16.CreateCartItemRequest\x1a\x10.GeneralResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/cart/item/add\x12X\n" +
+	"\x0eDeleteCartItem\x12\x16.RemoveCartItemRequest\x1a\x10.GeneralResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/cart/item/delete\x12Q\n" +
+	"\x0eClearCartItems\x12\x15.ClearCartItemRequest\x1a\x10.GeneralResponse\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/cart/clear\x12U\n" +
 	"\rListCartItems\x12\x15.ListCartItemsRequest\x1a\x16.ListCartItemsResponse\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
 	"/cart/listB\x18Z\x16cart/pkg/api/cart;cartb\x06proto3"
 
@@ -456,7 +447,7 @@ var file_cart_proto_goTypes = []any{
 	(*GeneralResponse)(nil),       // 0: GeneralResponse
 	(*CreateCartItemRequest)(nil), // 1: CreateCartItemRequest
 	(*RemoveCartItemRequest)(nil), // 2: RemoveCartItemRequest
-	(*GetCartItemRequest)(nil),    // 3: GetCartItemRequest
+	(*ClearCartItemRequest)(nil),  // 3: ClearCartItemRequest
 	(*ListCartItemsRequest)(nil),  // 4: ListCartItemsRequest
 	(*CartItemResponse)(nil),      // 5: CartItemResponse
 	(*ListCartItemsResponse)(nil), // 6: ListCartItemsResponse
@@ -465,11 +456,11 @@ var file_cart_proto_depIdxs = []int32{
 	5, // 0: ListCartItemsResponse.items:type_name -> CartItemResponse
 	1, // 1: CartService.AddCartItem:input_type -> CreateCartItemRequest
 	2, // 2: CartService.DeleteCartItem:input_type -> RemoveCartItemRequest
-	3, // 3: CartService.ClearCartItems:input_type -> GetCartItemRequest
+	3, // 3: CartService.ClearCartItems:input_type -> ClearCartItemRequest
 	4, // 4: CartService.ListCartItems:input_type -> ListCartItemsRequest
 	0, // 5: CartService.AddCartItem:output_type -> GeneralResponse
 	0, // 6: CartService.DeleteCartItem:output_type -> GeneralResponse
-	5, // 7: CartService.ClearCartItems:output_type -> CartItemResponse
+	0, // 7: CartService.ClearCartItems:output_type -> GeneralResponse
 	6, // 8: CartService.ListCartItems:output_type -> ListCartItemsResponse
 	5, // [5:9] is the sub-list for method output_type
 	1, // [1:5] is the sub-list for method input_type

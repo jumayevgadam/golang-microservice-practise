@@ -31,7 +31,7 @@ const (
 type CartServiceClient interface {
 	AddCartItem(ctx context.Context, in *CreateCartItemRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 	DeleteCartItem(ctx context.Context, in *RemoveCartItemRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
-	ClearCartItems(ctx context.Context, in *GetCartItemRequest, opts ...grpc.CallOption) (*CartItemResponse, error)
+	ClearCartItems(ctx context.Context, in *ClearCartItemRequest, opts ...grpc.CallOption) (*GeneralResponse, error)
 	ListCartItems(ctx context.Context, in *ListCartItemsRequest, opts ...grpc.CallOption) (*ListCartItemsResponse, error)
 }
 
@@ -63,9 +63,9 @@ func (c *cartServiceClient) DeleteCartItem(ctx context.Context, in *RemoveCartIt
 	return out, nil
 }
 
-func (c *cartServiceClient) ClearCartItems(ctx context.Context, in *GetCartItemRequest, opts ...grpc.CallOption) (*CartItemResponse, error) {
+func (c *cartServiceClient) ClearCartItems(ctx context.Context, in *ClearCartItemRequest, opts ...grpc.CallOption) (*GeneralResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CartItemResponse)
+	out := new(GeneralResponse)
 	err := c.cc.Invoke(ctx, CartService_ClearCartItems_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (c *cartServiceClient) ListCartItems(ctx context.Context, in *ListCartItems
 type CartServiceServer interface {
 	AddCartItem(context.Context, *CreateCartItemRequest) (*GeneralResponse, error)
 	DeleteCartItem(context.Context, *RemoveCartItemRequest) (*GeneralResponse, error)
-	ClearCartItems(context.Context, *GetCartItemRequest) (*CartItemResponse, error)
+	ClearCartItems(context.Context, *ClearCartItemRequest) (*GeneralResponse, error)
 	ListCartItems(context.Context, *ListCartItemsRequest) (*ListCartItemsResponse, error)
 	mustEmbedUnimplementedCartServiceServer()
 }
@@ -107,7 +107,7 @@ func (UnimplementedCartServiceServer) AddCartItem(context.Context, *CreateCartIt
 func (UnimplementedCartServiceServer) DeleteCartItem(context.Context, *RemoveCartItemRequest) (*GeneralResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCartItem not implemented")
 }
-func (UnimplementedCartServiceServer) ClearCartItems(context.Context, *GetCartItemRequest) (*CartItemResponse, error) {
+func (UnimplementedCartServiceServer) ClearCartItems(context.Context, *ClearCartItemRequest) (*GeneralResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClearCartItems not implemented")
 }
 func (UnimplementedCartServiceServer) ListCartItems(context.Context, *ListCartItemsRequest) (*ListCartItemsResponse, error) {
@@ -171,7 +171,7 @@ func _CartService_DeleteCartItem_Handler(srv interface{}, ctx context.Context, d
 }
 
 func _CartService_ClearCartItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCartItemRequest)
+	in := new(ClearCartItemRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func _CartService_ClearCartItems_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: CartService_ClearCartItems_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CartServiceServer).ClearCartItems(ctx, req.(*GetCartItemRequest))
+		return srv.(CartServiceServer).ClearCartItems(ctx, req.(*ClearCartItemRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

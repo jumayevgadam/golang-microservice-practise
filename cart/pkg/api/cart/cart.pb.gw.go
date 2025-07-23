@@ -91,7 +91,7 @@ func local_request_CartService_DeleteCartItem_0(ctx context.Context, marshaler r
 
 func request_CartService_ClearCartItems_0(ctx context.Context, marshaler runtime.Marshaler, client CartServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetCartItemRequest
+		protoReq ClearCartItemRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -106,7 +106,7 @@ func request_CartService_ClearCartItems_0(ctx context.Context, marshaler runtime
 
 func local_request_CartService_ClearCartItems_0(ctx context.Context, marshaler runtime.Marshaler, server CartServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetCartItemRequest
+		protoReq ClearCartItemRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -175,7 +175,7 @@ func RegisterCartServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.CartService/DeleteCartItem", runtime.WithHTTPPathPattern("/cart/clear"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.CartService/DeleteCartItem", runtime.WithHTTPPathPattern("/cart/item/delete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -195,7 +195,7 @@ func RegisterCartServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.CartService/ClearCartItems", runtime.WithHTTPPathPattern("/cart/item/get"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.CartService/ClearCartItems", runtime.WithHTTPPathPattern("/cart/clear"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -290,7 +290,7 @@ func RegisterCartServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/.CartService/DeleteCartItem", runtime.WithHTTPPathPattern("/cart/clear"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/.CartService/DeleteCartItem", runtime.WithHTTPPathPattern("/cart/item/delete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -307,7 +307,7 @@ func RegisterCartServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/.CartService/ClearCartItems", runtime.WithHTTPPathPattern("/cart/item/get"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/.CartService/ClearCartItems", runtime.WithHTTPPathPattern("/cart/clear"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -342,8 +342,8 @@ func RegisterCartServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 var (
 	pattern_CartService_AddCartItem_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cart", "item", "add"}, ""))
-	pattern_CartService_DeleteCartItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"cart", "clear"}, ""))
-	pattern_CartService_ClearCartItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cart", "item", "get"}, ""))
+	pattern_CartService_DeleteCartItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"cart", "item", "delete"}, ""))
+	pattern_CartService_ClearCartItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"cart", "clear"}, ""))
 	pattern_CartService_ListCartItems_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"cart", "list"}, ""))
 )
 

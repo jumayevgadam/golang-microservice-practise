@@ -15,6 +15,7 @@ var _ Config = (*CartServiceConfig)(nil)
 // Config interface provides methods to a retrieve a configuration values for stocks service.
 type Config interface {
 	Address() string
+	GRPCAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
@@ -32,6 +33,7 @@ type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
 		HTTPPort     string        `env:"HTTP_PORT,required"`
+		GRPCPort     string        `env:"GRPC_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -75,6 +77,10 @@ func NewCartServiceConfig() (*CartServiceConfig, error) {
 // Address returns the server address in format host:port.
 func (c *CartServiceConfig) Address() string {
 	return net.JoinHostPort("", c.Server.HTTPPort)
+}
+
+func (c *CartServiceConfig) GRPCAddress() string {
+	return net.JoinHostPort("", c.Server.GRPCPort)
 }
 
 func (c *CartServiceConfig) SrvConfig() ServerConfig {
