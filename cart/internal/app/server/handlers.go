@@ -1,27 +1,30 @@
 package server
 
 import (
-	v1 "cart/internal/controller/http/v1"
+	grpcV1 "cart/internal/controller/grpc/v1"
 	"cart/internal/repository/postgres"
 	"cart/internal/service/stockms"
 	"cart/internal/usecase/carts"
-	"net/http"
+	pb "cart/pkg/api/cart"
+	"fmt"
 )
 
-func (s *Server) setupRoutes() *http.ServeMux {
+func (s *Server) registerGRPCServices() error {
 	// repos.
 	cartRepo := postgres.NewCartItemRepository(s.psqlDB)
 
 	// services.
-	stockService := stockms.NewHTTPStockService(s.cfg.StockServiceURL())
+	stockService, err := stockms.NewGRPCStockService(s.cfg.StockServiceGRPCAddress())
+	if err != nil {
+		return fmt.Errorf("failed to create new gRPC stock service: %w", err)
+	}
 
 	// usecases.
 	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo, s.kafkaProducer)
 
-	// handlers.
-	handlers := &v1.Handlers{
-		CartServiceHandler: v1.NewCartServiceController(cartUseCase),
-	}
+	cartGRPCHandler := grpcV1.NewCartGRPCHandler(cartUseCase)
 
-	return v1.MapRoutes(handlers)
+	pb.RegisterCartServiceServer(s.grpcServer, cartGRPCHandler)
+
+	return nil
 }

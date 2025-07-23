@@ -32,15 +32,6 @@ type GetStockItemRequest struct {
 	SkuID uint32 `json:"skuID" validate:"required"`
 }
 
-type GetStockItemResponse struct {
-	SkuID    uint32 `json:"sku"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Count    uint16 `json:"count"`
-	Price    uint32 `json:"price"`
-	Location string `json:"location"`
-}
-
 type FilterRequest struct {
 	UserID      int64  `json:"userID" validate:"required"`
 	Location    string `json:"location" validate:"required"`
@@ -54,44 +45,5 @@ func (f *FilterRequest) ToDomain() domain.Filter {
 		Location:    f.Location,
 		PageSize:    f.PageSize,
 		CurrentPage: f.CurrentPage,
-	}
-}
-
-type StockItemResponse struct {
-	SkuID    uint32 `json:"sku_id"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Count    uint16 `json:"count"`
-	Price    uint32 `json:"price"`
-	Location string `json:"location"`
-}
-
-type ListStockItemsResponse struct {
-	Items      []StockItemResponse `json:"items"`
-	TotalCount uint16              `json:"total_count"`
-	PageNumber int64               `json:"page_number"`
-}
-
-func ToStockItemResponse(item domain.StockItem) StockItemResponse {
-	return StockItemResponse{
-		SkuID:    uint32(item.Sku.ID),
-		Name:     item.Sku.Name,
-		Type:     item.Sku.Type,
-		Count:    item.Count,
-		Price:    item.Price,
-		Location: item.Location,
-	}
-}
-
-func ToListResponse(p domain.PaginatedResponse[domain.StockItem]) ListStockItemsResponse {
-	items := make([]StockItemResponse, 0, len(p.Items))
-	for _, item := range p.Items {
-		items = append(items, ToStockItemResponse(item))
-	}
-
-	return ListStockItemsResponse{
-		Items:      items,
-		TotalCount: p.TotalCount,
-		PageNumber: p.PageNumber,
 	}
 }

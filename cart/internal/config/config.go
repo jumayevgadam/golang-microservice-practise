@@ -15,9 +15,11 @@ var _ Config = (*CartServiceConfig)(nil)
 // Config interface provides methods to a retrieve a configuration values for stocks service.
 type Config interface {
 	Address() string
+	GRPCAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
+	StockServiceGRPCAddress() string
 	GetKafkaBrokers() string
 }
 
@@ -32,6 +34,7 @@ type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
 		HTTPPort     string        `env:"HTTP_PORT,required"`
+		GRPCPort     string        `env:"GRPC_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -45,7 +48,8 @@ type (
 	}
 	// ExternalServicesConfig holds ExternalServices configurations which need in stock service.
 	ExternalServicesConfig struct {
-		StockServiceURL string `env:"STOCK_SERVICE_URL,required"`
+		StockServiceURL         string `env:"STOCK_SERVICE_URL,required"`
+		StockServiceGRPCAddress string `env:"STOCK_SERVICE_GRPC_ADDRESS,required"`
 	}
 	// KafkaServiceConfig holds needed configurations for cart service.
 	KafkaServiceConfig struct {
@@ -77,6 +81,10 @@ func (c *CartServiceConfig) Address() string {
 	return net.JoinHostPort("", c.Server.HTTPPort)
 }
 
+func (c *CartServiceConfig) GRPCAddress() string {
+	return net.JoinHostPort("", c.Server.GRPCPort)
+}
+
 func (c *CartServiceConfig) SrvConfig() ServerConfig {
 	return c.Server
 }
@@ -88,6 +96,10 @@ func (c *CartServiceConfig) DbConfig() PostgresConfig {
 
 func (c *CartServiceConfig) StockServiceURL() string {
 	return c.ExternalServices.StockServiceURL
+}
+
+func (c *CartServiceConfig) StockServiceGRPCAddress() string {
+	return c.ExternalServices.StockServiceGRPCAddress
 }
 
 func (c *CartServiceConfig) GetKafkaBrokers() string {

@@ -44,7 +44,7 @@ func NewCartServiceApp() error {
 	defer kafkaProducer.Close()
 
 	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
-	if err := srv.RunHTTPServer(); err != nil {
+	if err := srv.RunServer(); err != nil {
 		log.Printf("%+v\n", err.Error())
 		return fmt.Errorf("can not start http server: %w", err)
 	}
