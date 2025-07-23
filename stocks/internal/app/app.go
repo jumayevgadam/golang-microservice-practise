@@ -47,7 +47,7 @@ func NewStockServiceApp() error {
 	defer kafkaProducer.Close()
 
 	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
-	if err := srv.RunHTTPServer(); err != nil {
+	if err := srv.RunServer(); err != nil {
 		log.Printf("%+v\n", err.Error())
 		return fmt.Errorf("failed to run http server: %w", err)
 	}
