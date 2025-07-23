@@ -1,94 +1,49 @@
 package v1
 
-import (
-	dtoModels "stocks/internal/controller/http/v1"
-	"stocks/internal/domain"
-	"stocks/pkg/api/stocks"
-	helper "stocks/pkg/httphelper"
-)
+import "stocks/internal/domain"
 
-func fromGrpcStockItemReqToDomain(req *stocks.CreateStockItemRequest) (domain.StockItem, error) {
-	createStockItemReq := dtoModels.CreateStockItemRequest{
-		SkuID:    req.SkuId,
-		UserID:   req.UserId,
-		Count:    uint16(req.Count),
-		Price:    req.Price,
-		Location: req.Location,
-	}
-
-	if err := helper.ValidateRequest(&createStockItemReq); err != nil {
-		return domain.StockItem{}, err
-	}
-
-	return createStockItemReq.ToDomain(), nil
+type CreateStockItemRequest struct {
+	UserID   int64  `json:"userID" validate:"required"`
+	SkuID    uint32 `json:"skuID" validate:"required"`
+	Count    uint16 `json:"count" validate:"required"`
+	Price    uint32 `json:"price" validate:"required"`
+	Location string `json:"location" validate:"required"`
 }
 
-func fromGrpcDeleteStockItemReqToDomain(req *stocks.DeleteStockItemRequest) (domain.StockItem, error) {
-	deleteStockItemReq := dtoModels.DeleteStockItemRequest{
-		UserID: req.UserId,
-		SkuID:  req.SkuId,
-	}
-
-	if err := helper.ValidateRequest(&deleteStockItemReq); err != nil {
-		return domain.StockItem{}, err
-	}
-
+// convert to domain model.
+func (r *CreateStockItemRequest) ToDomain() domain.StockItem {
 	return domain.StockItem{
-		UserID: domain.UserID(deleteStockItemReq.UserID),
+		UserID: domain.UserID(r.UserID),
 		Sku: domain.SKU{
-			ID: domain.SKUID(deleteStockItemReq.SkuID),
+			ID: domain.SKUID(r.SkuID),
 		},
-	}, nil
-}
-
-func fromGrpcGetStockItemReqToDomain(req *stocks.GetStockItemRequest) (domain.SKUID, error) {
-	getStockItemReq := dtoModels.GetStockItemRequest{
-		SkuID: req.SkuId,
-	}
-
-	if err := helper.ValidateRequest(&getStockItemReq); err != nil {
-		return domain.SKUID(0), err
-	}
-
-	return domain.SKUID(getStockItemReq.SkuID), nil
-}
-
-func fromStockItemDomainToGrpc(stockItem domain.StockItem) *stocks.StockItemResponse {
-	return &stocks.StockItemResponse{
-		SkuId:    uint32(stockItem.Sku.ID),
-		Name:     stockItem.Sku.Name,
-		Type:     stockItem.Sku.Type,
-		Count:    uint32(stockItem.Count),
-		Price:    stockItem.Price,
-		Location: stockItem.Location,
+		Count:    r.Count,
+		Price:    r.Price,
+		Location: r.Location,
 	}
 }
 
-func fromGrpcListStockItemsFilterToDomain(filter *stocks.FilterRequest) (domain.Filter, error) {
-	filterRequest := dtoModels.FilterRequest{
-		UserID:      filter.UserId,
-		Location:    filter.Location,
-		PageSize:    filter.PageSize,
-		CurrentPage: filter.CurrentPage,
-	}
-
-	if err := helper.ValidateRequest(&filterRequest); err != nil {
-		return domain.Filter{}, err
-	}
-
-	return filterRequest.ToDomain(), nil
+type DeleteStockItemRequest struct {
+	UserID int64  `json:"userID" validate:"required"`
+	SkuID  uint32 `json:"skuID" validate:"required"`
 }
 
-func fromListStockItemsDomainToGrpc(stockItems []domain.StockItem, totalCount uint16, pageNumber int64) *stocks.ListStockItemsResponse {
-	stockItemResponses := make([]*stocks.StockItemResponse, 0, len(stockItems))
+type GetStockItemRequest struct {
+	SkuID uint32 `json:"skuID" validate:"required"`
+}
 
-	for _, stockItem := range stockItems {
-		stockItemResponses = append(stockItemResponses, fromStockItemDomainToGrpc(stockItem))
-	}
+type FilterRequest struct {
+	UserID      int64  `json:"userID" validate:"required"`
+	Location    string `json:"location" validate:"required"`
+	PageSize    int64  `json:"pageSize" validate:"required,gte=1"`
+	CurrentPage int64  `json:"currentPage" validate:"required,gte=1"`
+}
 
-	return &stocks.ListStockItemsResponse{
-		Items:      stockItemResponses,
-		TotalCount: uint32(totalCount),
-		PageNumber: pageNumber,
+func (f *FilterRequest) ToDomain() domain.Filter {
+	return domain.Filter{
+		UserID:      domain.UserID(f.UserID),
+		Location:    f.Location,
+		PageSize:    f.PageSize,
+		CurrentPage: f.CurrentPage,
 	}
 }

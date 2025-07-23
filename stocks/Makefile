@@ -76,3 +76,4 @@ generate-stocks-proto:
 		--go-grpc_out=stocks/pkg/api/stocks --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=stocks/pkg/api/stocks --grpc-gateway_opt=paths=source_relative \
 		proto/stocks.proto
+

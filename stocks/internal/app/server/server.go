@@ -133,23 +133,21 @@ func (s *Server) runGatewayServer() error {
 	defer cancel()
 
 	// create grpc-gateway mux.
-	mux := runtime.NewServeMux()
+	gatewayMux := runtime.NewServeMux()
 
 	grpcEndpoint := s.cfg.GRPCAddress()
 
 	// register gRPC-gateway handlers.
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	err := pb.RegisterStocksServiceHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+	err := pb.RegisterStocksServiceHandlerFromEndpoint(ctx, gatewayMux, grpcEndpoint, opts)
 	if err != nil {
 		return fmt.Errorf("failed to register gateway handler: %w", err)
 	}
 
-	httpMux := s.setupRoutes()
-
 	s.server = &http.Server{
 		Addr:         s.cfg.Address(),
-		Handler:      httpMux,
+		Handler:      gatewayMux,
 		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
 		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
 	}
