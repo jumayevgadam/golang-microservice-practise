@@ -1,23 +1,40 @@
 package v1
 
 import (
+	dtoModels "cart/internal/controller/http/v1"
 	"cart/internal/domain"
 	"cart/pkg/api/cart"
+	helper "cart/pkg/httphelper"
 )
 
-func fromGrpcCreateCartItemReqToDomain(req *cart.CreateCartItemRequest) domain.CartItem {
-	return domain.CartItem{
-		UserID: domain.UserID(req.UserId),
-		SkuID:  domain.SkuID(req.SkuId),
+func fromGrpcCreateCartItemReqToDomain(req *cart.CreateCartItemRequest) (domain.CartItem, error) {
+	createCartItemReq := dtoModels.CreateCartItemRequest{
+		UserID: req.UserId,
+		SkuID:  req.SkuId,
 		Count:  uint16(req.Count),
 	}
+
+	if err := helper.ValidateRequest(&createCartItemReq); err != nil {
+		return domain.CartItem{}, err
+	}
+
+	return createCartItemReq.ToDomain(), nil
 }
 
-func fromGrpcDeleteCartItemReqToDomain(req *cart.RemoveCartItemRequest) domain.CartItem {
-	return domain.CartItem{
-		UserID: domain.UserID(req.UserId),
-		SkuID:  domain.SkuID(req.SkuId),
+func fromGrpcDeleteCartItemReqToDomain(req *cart.RemoveCartItemRequest) (domain.CartItem, error) {
+	deleteCartItemReq := dtoModels.DeleteCartItemRequest{
+		UserID: req.UserId,
+		SkuID:  req.SkuId,
 	}
+
+	if err := helper.ValidateRequest(&deleteCartItemReq); err != nil {
+		return domain.CartItem{}, err
+	}
+
+	return domain.CartItem{
+		UserID: domain.UserID(deleteCartItemReq.UserID),
+		SkuID:  domain.SkuID(deleteCartItemReq.SkuID),
+	}, nil
 }
 
 func fromListStockItemsDomainToGrpc(cartItemsDomain domain.ListCartItems) *cart.ListCartItemsResponse {

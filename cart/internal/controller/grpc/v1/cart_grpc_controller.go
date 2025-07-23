@@ -4,7 +4,6 @@ import (
 	"cart/internal/domain"
 	"cart/internal/usecase"
 	pb "cart/pkg/api/cart"
-	helper "cart/pkg/httphelper"
 	"context"
 	"errors"
 
@@ -26,13 +25,12 @@ func NewCartGRPCHandler(cartUC usecase.CartItemUseCase) *CartGRPCHandler {
 }
 
 func (c *CartGRPCHandler) AddCartItem(ctx context.Context, req *pb.CreateCartItemRequest) (*pb.GeneralResponse, error) {
-	cartItemReq := fromGrpcCreateCartItemReqToDomain(req)
-
-	if err := helper.ValidateRequest(&cartItemReq); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "helper.ValidateRequest[AddCartItem]: %v", err.Error())
+	cartItemReq, err := fromGrpcCreateCartItemReqToDomain(req)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := c.cartUC.AddCartItem(ctx, cartItemReq)
+	err = c.cartUC.AddCartItem(ctx, cartItemReq)
 	if err != nil {
 		if errors.Is(err, domain.ErrInSufficientStockCount) {
 			return nil, status.Error(codes.InvalidArgument, "insufficient stock count")
@@ -48,13 +46,12 @@ func (c *CartGRPCHandler) AddCartItem(ctx context.Context, req *pb.CreateCartIte
 }
 
 func (c *CartGRPCHandler) DeleteCartItem(ctx context.Context, req *pb.RemoveCartItemRequest) (*pb.GeneralResponse, error) {
-	deleteCartItemReq := fromGrpcDeleteCartItemReqToDomain(req)
-
-	if err := helper.ValidateRequest(&deleteCartItemReq); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "helper.ValidateRequest[DeleteCartItem]: %v", err.Error())
+	deleteCartItemReq, err := fromGrpcDeleteCartItemReqToDomain(req)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := c.cartUC.DeleteCartItem(ctx, deleteCartItemReq.UserID, deleteCartItemReq.SkuID)
+	err = c.cartUC.DeleteCartItem(ctx, deleteCartItemReq.UserID, deleteCartItemReq.SkuID)
 	if err != nil {
 		if errors.Is(err, domain.ErrCartItemNotFound) {
 			return nil, status.Error(codes.NotFound, cartItemNotFound)
@@ -71,6 +68,9 @@ func (c *CartGRPCHandler) DeleteCartItem(ctx context.Context, req *pb.RemoveCart
 
 func (c *CartGRPCHandler) ClearCartItems(ctx context.Context, req *pb.ClearCartItemRequest) (*pb.GeneralResponse, error) {
 	userID := domain.UserID(req.UserId)
+	if userID == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID cannot be zero")
+	}
 
 	err := c.cartUC.ClearCartItems(ctx, userID)
 	if err != nil {
@@ -89,6 +89,9 @@ func (c *CartGRPCHandler) ClearCartItems(ctx context.Context, req *pb.ClearCartI
 
 func (c *CartGRPCHandler) ListCartItems(ctx context.Context, req *pb.ListCartItemsRequest) (*pb.ListCartItemsResponse, error) {
 	userID := domain.UserID(req.UserId)
+	if userID == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user ID cannot be zero")
+	}
 
 	listCartItems, err := c.cartUC.ListCartItems(ctx, userID)
 	if err != nil {

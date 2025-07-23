@@ -6,7 +6,6 @@ import (
 	"stocks/internal/domain"
 	"stocks/internal/usecase"
 	pb "stocks/pkg/api/stocks"
-	helper "stocks/pkg/httphelper"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,13 +25,12 @@ func NewStockGRPCHandler(stockUC usecase.StockServiceUseCase) *StockGRPCHandler 
 }
 
 func (s *StockGRPCHandler) AddStockItem(ctx context.Context, req *pb.CreateStockItemRequest) (*pb.GeneralResponse, error) {
-	stockItemReq := fromGrpcStockItemReqToDomain(req)
-
-	if err := helper.ValidateRequest(&stockItemReq); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "helper.ValidateRequest[CreateStockItemRequest]: %v", err)
+	stockItemReq, err := fromGrpcStockItemReqToDomain(req)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := s.stockUC.AddStockItem(ctx, stockItemReq)
+	err = s.stockUC.AddStockItem(ctx, stockItemReq)
 	if err != nil {
 		if errors.Is(err, domain.ErrSKUNotFound) {
 			return nil, status.Error(codes.NotFound, "SKU not found")
@@ -48,13 +46,12 @@ func (s *StockGRPCHandler) AddStockItem(ctx context.Context, req *pb.CreateStock
 }
 
 func (s *StockGRPCHandler) DeleteStockItem(ctx context.Context, req *pb.DeleteStockItemRequest) (*pb.GeneralResponse, error) {
-	deleteStockItemReq := fromGrpcDeleteStockItemReqToDomain(req)
-
-	if err := helper.ValidateRequest(&deleteStockItemReq); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "helper.ValidateRequest[DeleteStockItem]: %v", err)
+	deleteStockItemReq, err := fromGrpcDeleteStockItemReqToDomain(req)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	err := s.stockUC.DeleteStockItem(ctx, deleteStockItemReq.UserID, deleteStockItemReq.Sku.ID)
+	err = s.stockUC.DeleteStockItem(ctx, deleteStockItemReq.UserID, deleteStockItemReq.Sku.ID)
 	if err != nil {
 		if errors.Is(err, domain.ErrStockItemNotFound) {
 			return nil, status.Error(codes.NotFound, stockItemNotFound)
@@ -70,7 +67,10 @@ func (s *StockGRPCHandler) DeleteStockItem(ctx context.Context, req *pb.DeleteSt
 }
 
 func (s *StockGRPCHandler) GetStockItemBySKU(ctx context.Context, req *pb.GetStockItemRequest) (*pb.StockItemResponse, error) {
-	skuID := fromGrpcGetStockItemReqToDomain(req)
+	skuID, err := fromGrpcGetStockItemReqToDomain(req)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	stockItem, err := s.stockUC.GetStockItemBySKU(ctx, skuID)
 	if err != nil {
@@ -85,10 +85,9 @@ func (s *StockGRPCHandler) GetStockItemBySKU(ctx context.Context, req *pb.GetSto
 }
 
 func (s *StockGRPCHandler) ListStockItemsByLocation(ctx context.Context, filter *pb.FilterRequest) (*pb.ListStockItemsResponse, error) {
-	filterReq := fromGrpcListStockItemsFilterToDomain(filter)
-
-	if err := helper.ValidateRequest(&filterReq); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "helper.ValidateRequest[ListStockItemsByLocation]: %v", err)
+	filterReq, err := fromGrpcListStockItemsFilterToDomain(filter)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	listStockItems, err := s.stockUC.ListStockItems(ctx, filterReq)
