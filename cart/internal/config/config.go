@@ -19,6 +19,7 @@ type Config interface {
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
+	StockServiceGRPCAddress() string
 	GetKafkaBrokers() string
 }
 
@@ -47,7 +48,8 @@ type (
 	}
 	// ExternalServicesConfig holds ExternalServices configurations which need in stock service.
 	ExternalServicesConfig struct {
-		StockServiceURL string `env:"STOCK_SERVICE_URL,required"`
+		StockServiceURL         string `env:"STOCK_SERVICE_URL,required"`
+		StockServiceGRPCAddress string `env:"STOCK_SERVICE_GRPC_ADDRESS,required"`
 	}
 	// KafkaServiceConfig holds needed configurations for cart service.
 	KafkaServiceConfig struct {
@@ -94,6 +96,10 @@ func (c *CartServiceConfig) DbConfig() PostgresConfig {
 
 func (c *CartServiceConfig) StockServiceURL() string {
 	return c.ExternalServices.StockServiceURL
+}
+
+func (c *CartServiceConfig) StockServiceGRPCAddress() string {
+	return c.ExternalServices.StockServiceGRPCAddress
 }
 
 func (c *CartServiceConfig) GetKafkaBrokers() string {

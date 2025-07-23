@@ -1,4 +1,4 @@
-.PHONY: help build-all build run test clean lint generate-stocks-proto
+.PHONY: help build-all build run test clean lint generate-stocks-proto generate-stocks-for-cart generate-cart-proto
 
 # Default target
 help:
@@ -51,6 +51,16 @@ generate-stocks-proto:
 		--go_out=stocks/pkg/api/stocks --go_opt=paths=source_relative \
 		--go-grpc_out=stocks/pkg/api/stocks --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=stocks/pkg/api/stocks --grpc-gateway_opt=paths=source_relative \
+		proto/stocks.proto
+
+generate-stocks-for-cart:
+	@mkdir -p cart/pkg/api/stocks
+	@protoc \
+		-I proto \
+		-I ./stocks/vendor.protogen \
+		--go_out=cart/pkg/api/stocks --go_opt=paths=source_relative \
+		--go-grpc_out=cart/pkg/api/stocks --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=cart/pkg/api/stocks --grpc-gateway_opt=paths=source_relative \
 		proto/stocks.proto
 
 generate-cart-proto:

@@ -15,7 +15,7 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	cartRepo := postgres.NewCartItemRepository(s.psqlDB)
 
 	// services.
-	stockService := stockms.NewHTTPStockService(s.cfg.StockServiceURL())
+	stockService, _ := stockms.NewGRPCStockService(s.cfg.StockServiceGRPCAddress())
 
 	// usecases.
 	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo, s.kafkaProducer)
@@ -32,8 +32,8 @@ func (s *Server) registerGRPCServices() {
 	// repos.
 	cartRepo := postgres.NewCartItemRepository(s.psqlDB)
 
-	// services.
-	stockService := stockms.NewHTTPStockService(s.cfg.StockServiceURL())
+	// services. ignored error in this place...
+	stockService, _ := stockms.NewGRPCStockService(s.cfg.StockServiceGRPCAddress())
 
 	// usecases.
 	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo, s.kafkaProducer)
