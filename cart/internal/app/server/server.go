@@ -108,11 +108,19 @@ func (s *Server) runGRPCServer() error {
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", s.cfg.GRPCAddress(), err)
 	}
-	defer lis.Close()
+	defer func(lis net.Listener) {
+		err := lis.Close()
+		if err != nil {
+			log.Printf("failed to close listener on %s: %w", s.cfg.GRPCAddress(), err)
+		}
+	}(lis)
 	// create a grpc server.
 	s.grpcServer = grpc.NewServer()
 	// enable reflection for grpcui.
-	s.registerGRPCServices()
+	err = s.registerGRPCServices()
+	if err != nil {
+		return fmt.Errorf("failed to register gRPC services: %w", err)
+	}
 	reflection.Register(s.grpcServer)
 
 	log.Printf("grpc Server starting on %s", s.cfg.GRPCAddress())

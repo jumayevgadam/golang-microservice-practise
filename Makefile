@@ -72,5 +72,3 @@ generate-cart-proto:
 		--go-grpc_out=cart/pkg/api/cart --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=cart/pkg/api/cart --grpc-gateway_opt=paths=source_relative \
 		proto/cart.proto
-
-		
