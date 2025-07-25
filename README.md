@@ -203,3 +203,64 @@ docker build -t service_name:hw10 .
 ```
 
 > ⚠️ Don’t forget to update your Dockerfile to install.
+
+
+
+---
+## Homework 11: Logging, Tracing, and Metrics
+
+### Overview
+
+In this assignment, we focused on improving observability in our services by implementing:
+
+1. **Structured Logging** using a logging library.
+2. **Distributed Tracing** for tracking requests through the system.
+3. **Prometheus Metrics**:
+   - `failed_requests_total`: Count of failed requests.
+   - `response_time_seconds`: Duration of each request.
+
+---
+
+### Objectives
+
+#### Logging
+- Used a structured logger (e.g., **Zap**) to log meaningful events.
+- Included contextual information like:
+  - HTTP method, path
+  - Request ID or trace ID
+  - Error messages (if any)
+
+#### Tracing
+- Added trace support (e.g., **OpenTelemetry**, **Jaeger**).
+- Propagated trace context across services.
+- Every request should have:
+  - A **trace ID**
+  - Optional **span names** for internal operations
+
+#### Metrics
+1. `failed_requests_total`  
+   - Type: Counter  
+   - Increments on every failed HTTP request
+
+2. `response_time_seconds`  
+   - Type: Histogram  
+   - Measures response time of each HTTP request
+
+---
+
+## 💡 Example
+
+A log entry:
+```json
+{
+  "level": "error",
+  "msg": "Request failed",
+  "method": "GET",
+  "path": "/products",
+  "status": 500,
+  "trace_id": "abc123",
+  "error": "database connection failed"
+}
+```
+
+> ⚠️ Don’t forget to update your Docker images with tag hw11.
