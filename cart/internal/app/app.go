@@ -62,13 +62,13 @@ func NewCartServiceApp() error {
 
 	kafkaProducer, err := kafka.NewCartServiceProducer(strings.Split(cfg.GetKafkaBrokers(), ","))
 	if err != nil {
-		log.Printf("failed to initialize cart service kafka producer: %v\n", err.Error())
+		logger.Errorf("failed to initialize cart service kafka producer: %v\n", err.Error())
 	}
 	defer kafkaProducer.Close()
 
 	srv := server.NewServer(cfg, psqlDB, kafkaProducer, logger)
 	if err := srv.RunServer(); err != nil {
-		log.Printf("%+v\n", err.Error())
+		logger.Errorf("%+v\n", err.Error())
 		return fmt.Errorf("can not start http server: %w", err)
 	}
 

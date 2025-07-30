@@ -31,6 +31,7 @@ type StockServiceConfig struct {
 type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
+		ServiceName  string        `env:"SERVICE_NAME,required"`
 		HTTPPort     string        `env:"HTTP_PORT,required"`
 		GRPCPORT     string        `env:"GRPC_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
@@ -45,8 +46,11 @@ type (
 		DBName   string `env:"DB_NAME,required"`
 	}
 	// ExternalServicesConfig holds ExternalServices configurations which need in stock service.
-	ExternalServicesConfig struct{}
-
+	ExternalServicesConfig struct {
+		ObservalityConfig struct {
+			LogStashHost string `env:"LOGSTASH_HOST,required"`
+		}
+	}
 	// KafkaServiceConfig holds needed configurations for stock service event producer.
 	KafkaServiceConfig struct {
 		Brokers string `env:"KAFKA_BROKERS,required"`
