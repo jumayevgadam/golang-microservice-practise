@@ -15,6 +15,8 @@ services:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - shared-network
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.12.0
@@ -24,26 +26,31 @@ services:
     depends_on:
       - elasticsearch
     volumes:
-      - ./logstash/con
-  
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - shared-network
+
   jaeger:
     image: jaegertracing/all-in-one:1.51
     container_name: jaeger
     ports:
-      - "6831:6831/udp"
-      - "6832:6832/udp"
-      - "16686:16686"
-      - "14268:14268"
-      - "14250:14250"
+      - "16686:16686" # Jaeger UI
+      - "6831:6831/udp" # Jaeger UDP Thrift
+      - "14268:14268" # Collector HTTP
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - shared-network
 
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - shared-network
 
   grafana:
     image: grafana/grafana:10.4.1
@@ -54,7 +61,16 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    external: true
+    name: external-shared-network
 
 volumes:
   grafana-data:
+
+
     

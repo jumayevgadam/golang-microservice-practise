@@ -34,6 +34,7 @@ type CartServiceConfig struct {
 type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
+		ServiceName  string        `env:"SERVICE_NAME,required"`
 		HTTPPort     string        `env:"HTTP_PORT,required"`
 		GRPCPort     string        `env:"GRPC_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`

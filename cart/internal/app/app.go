@@ -7,6 +7,7 @@ import (
 	"cart/pkg/connection"
 	"cart/pkg/constants"
 	zapLogger "cart/pkg/log/zap"
+	"cart/pkg/tracer"
 	"context"
 	"fmt"
 	"log"
@@ -25,12 +26,26 @@ func NewCartServiceApp() error {
 		return fmt.Errorf("failed to initialize NewCartServiceConfig: %w", err)
 	}
 
+	// init logger.
 	logger, cleanup, err := zapLogger.NewLogger(cfg.Observality.LogStashHost)
 	if err != nil {
 		return fmt.Errorf("error initializing logger: %w", err)
 	}
 
 	defer cleanup()
+
+	// init tracer.
+	tp, err := tracer.InitTracer(cfg.Server.ServiceName)
+	if err != nil {
+		return fmt.Errorf("failed to initialize tracer: %w", err)
+	}
+
+	defer func() {
+		err := tp.Shutdown(context.Background())
+		if err != nil {
+			logger.Error("error shutting down tracer")
+		}
+	}()
 
 	ctxTimeOut, cancel := context.WithTimeout(context.Background(), constants.DBCtxTimeOut*time.Second)
 	defer cancel()
