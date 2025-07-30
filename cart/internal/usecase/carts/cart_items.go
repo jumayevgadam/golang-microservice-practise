@@ -56,7 +56,7 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 	payload := kafka.CartItemAddedPayload{
 		CartID: fmt.Sprintf("%d", cartItem.UserID), // assuming userID is cartID.
 		SKU:    uint32(cartItem.SkuID),
-		Count:  uint16(cartItem.Count),
+		Count:  cartItem.Count,
 		Status: "success",
 	}
 
@@ -64,10 +64,11 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 		u.KafkaProducer.ProduceCartItemFailed(ctx, kafka.CartItemFailedPayload{
 			CartID: fmt.Sprintf("%d", cartItem.UserID),
 			SKU:    uint32(cartItem.SkuID),
-			Count:  uint16(cartItem.Count),
+			Count:  cartItem.Count,
 			Status: "failed",
 			Reason: "not enough stock",
 		})
+
 		return domain.ErrInSufficientStockCount
 	}
 

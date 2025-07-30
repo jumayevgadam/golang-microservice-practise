@@ -56,8 +56,10 @@ func (s *Server) RunServer() error {
 
 	// start grpc server.
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
+
 		if err := s.runGRPCServer(); err != nil {
 			errChan <- fmt.Errorf("runGRPCServer: %w", err)
 		}
@@ -65,8 +67,10 @@ func (s *Server) RunServer() error {
 
 	// start grpc-gateway server.
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
+
 		if err := s.runGatewayServer(); err != nil {
 			errChan <- fmt.Errorf("runGatewayServer: %w", err)
 		}
@@ -119,6 +123,7 @@ func (s *Server) runGRPCServer() error {
 	reflection.Register(s.grpcServer)
 
 	log.Printf("grpc Server starting on %s", s.cfg.GRPCAddress())
+
 	if err := s.grpcServer.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve stock service gRPC: %w", err)
 	}
@@ -129,6 +134,7 @@ func (s *Server) runGRPCServer() error {
 func (s *Server) runGatewayServer() error {
 	// create a context for a gateway.
 	ctx := context.Background()
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -153,6 +159,7 @@ func (s *Server) runGatewayServer() error {
 	}
 
 	log.Printf("Gateway server starting on %s", s.cfg.Address())
+
 	if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("failed to serve gateway: %w", err)
 	}

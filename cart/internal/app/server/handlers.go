@@ -22,7 +22,7 @@ func (s *Server) registerGRPCServices() error {
 	// usecases.
 	cartUseCase := carts.NewCartServiceUseCase(stockService, cartRepo, s.kafkaProducer)
 
-	cartGRPCHandler := grpcV1.NewCartGRPCHandler(cartUseCase)
+	cartGRPCHandler := grpcV1.NewCartGRPCHandler(cartUseCase, s.logger)
 
 	pb.RegisterCartServiceServer(s.grpcServer, cartGRPCHandler)
 

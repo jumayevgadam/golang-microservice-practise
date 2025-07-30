@@ -6,6 +6,7 @@ import (
 	"cart/internal/kafka"
 	"cart/pkg/connection"
 	"cart/pkg/constants"
+	zapLogger "cart/pkg/log/zap"
 	"context"
 	"fmt"
 	"log"
@@ -23,6 +24,13 @@ func NewCartServiceApp() error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize NewCartServiceConfig: %w", err)
 	}
+
+	logger, cleanup, err := zapLogger.NewLogger(cfg.Observality.LogStashHost)
+	if err != nil {
+		return fmt.Errorf("error initializing logger: %w", err)
+	}
+
+	defer cleanup()
 
 	ctxTimeOut, cancel := context.WithTimeout(context.Background(), constants.DBCtxTimeOut*time.Second)
 	defer cancel()
@@ -43,7 +51,7 @@ func NewCartServiceApp() error {
 	}
 	defer kafkaProducer.Close()
 
-	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
+	srv := server.NewServer(cfg, psqlDB, kafkaProducer, logger)
 	if err := srv.RunServer(); err != nil {
 		log.Printf("%+v\n", err.Error())
 		return fmt.Errorf("can not start http server: %w", err)

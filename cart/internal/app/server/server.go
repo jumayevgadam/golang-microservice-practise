@@ -6,10 +6,10 @@ import (
 	pb "cart/pkg/api/cart"
 	"cart/pkg/connection"
 	"cart/pkg/constants"
+	"cart/pkg/log"
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -30,18 +30,21 @@ type Server struct {
 	cfg           config.Config
 	psqlDB        connection.DB
 	kafkaProducer kafka.CartEventProducer
+	logger        log.Logger
 }
 
 func NewServer(
 	cfg config.Config,
 	psqlDB connection.DB,
 	kafkaProducer kafka.CartEventProducer,
+	logger log.Logger,
 ) *Server {
 	return &Server{
 		server:        nil,
 		cfg:           cfg,
 		psqlDB:        psqlDB,
 		kafkaProducer: kafkaProducer,
+		logger:        logger,
 	}
 }
 
@@ -53,8 +56,10 @@ func (s *Server) RunServer() error {
 
 	// start grpc server.
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
+
 		if err := s.runGRPCServer(); err != nil {
 			errChan <- fmt.Errorf("runGRPCServer: %w", err)
 		}
@@ -62,8 +67,10 @@ func (s *Server) RunServer() error {
 
 	// start grpc-gateway server.
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
+
 		if err := s.runGatewayServer(); err != nil {
 			errChan <- fmt.Errorf("runGatewayServer: %w", err)
 		}
@@ -75,9 +82,9 @@ func (s *Server) RunServer() error {
 	// wait for a signal or an error from the servers.
 	select {
 	case <-quit:
-		log.Println("shutting down server...")
+		s.logger.Info("shutting down server...")
 	case err := <-errChan:
-		log.Printf("Server error: %v", err.Error())
+		s.logger.Errorf("Server error: %v", err.Error())
 	}
 
 	// Create context for shutdown
@@ -87,7 +94,7 @@ func (s *Server) RunServer() error {
 	// shutdown http server.
 	if s.server != nil {
 		if err := s.server.Shutdown(ctxTimeOut); err != nil {
-			log.Printf("s.server.Shutdown: %v", err.Error())
+			s.logger.Errorf("s.server.Shutdown: %v", err.Error())
 		}
 	}
 
@@ -98,7 +105,7 @@ func (s *Server) RunServer() error {
 
 	wg.Wait()
 
-	log.Println("cart service successfully shut down...")
+	s.logger.Info("cart service successfully shut down...")
 
 	return nil
 }
@@ -111,7 +118,7 @@ func (s *Server) runGRPCServer() error {
 	defer func(lis net.Listener) {
 		err := lis.Close()
 		if err != nil {
-			log.Printf("failed to close listener on %s: %w", s.cfg.GRPCAddress(), err)
+			s.logger.Errorf("failed to close listener on %s: %v", s.cfg.GRPCAddress(), err)
 		}
 	}(lis)
 	// create a grpc server.
@@ -121,9 +128,11 @@ func (s *Server) runGRPCServer() error {
 	if err != nil {
 		return fmt.Errorf("failed to register gRPC services: %w", err)
 	}
+
 	reflection.Register(s.grpcServer)
 
-	log.Printf("grpc Server starting on %s", s.cfg.GRPCAddress())
+	s.logger.Infof("grpc Server starting on %s", s.cfg.GRPCAddress())
+
 	if err := s.grpcServer.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve cart service gRPC: %w", err)
 	}
@@ -134,6 +143,7 @@ func (s *Server) runGRPCServer() error {
 func (s *Server) runGatewayServer() error {
 	// create a context for a gateway.
 	ctx := context.Background()
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -157,7 +167,8 @@ func (s *Server) runGatewayServer() error {
 		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
 	}
 
-	log.Printf("Gateway server starting on %s", s.cfg.Address())
+	s.logger.Infof("Gateway server starting on %s", s.cfg.Address())
+
 	if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("failed to serve gateway: %w", err)
 	}

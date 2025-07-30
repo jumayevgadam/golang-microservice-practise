@@ -28,6 +28,7 @@ type CartServiceConfig struct {
 	Postgres         PostgresConfig
 	ExternalServices ExternalServicesConfig
 	Kafka            KafkaServiceConfig
+	Observality      ObservalityConfig
 }
 
 type (
@@ -54,6 +55,10 @@ type (
 	// KafkaServiceConfig holds needed configurations for cart service.
 	KafkaServiceConfig struct {
 		Brokers string `env:"KAFKA_BROKERS,required"`
+	}
+	// ObservalityConfig holds needed configurations for observality.
+	ObservalityConfig struct {
+		LogStashHost string `env:"LOGSTASH_HOST,required"`
 	}
 )
 

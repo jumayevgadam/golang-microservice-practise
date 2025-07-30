@@ -5,4 +5,5 @@ use (
 	./stocks
 	./metrics-consumer
 	./proto
+	./monitoring
 )
