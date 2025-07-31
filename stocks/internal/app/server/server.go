@@ -166,6 +166,7 @@ func (s *Server) runGatewayServer() error {
 
 	err := pb.RegisterStocksServiceHandlerFromEndpoint(ctx, gatewayMux, grpcEndpoint, opts)
 	if err != nil {
+		s.logger.Errorf("error register stocks service handler: %v", err.Error())
 		return fmt.Errorf("failed to register gateway handler: %w", err)
 	}
 

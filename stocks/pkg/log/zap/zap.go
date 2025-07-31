@@ -2,7 +2,7 @@ package zap
 
 import (
 	"fmt"
-	"os"
+	"net"
 	"stocks/pkg/log"
 
 	"go.uber.org/zap"
@@ -13,14 +13,14 @@ var _ log.Logger = &Logger{}
 
 type Logger struct {
 	L *zap.Logger
-	// c net.Conn
+	c net.Conn
 }
 
-func NewLogger() (*Logger, func(), error) {
-	// conn, err := net.Dial("tcp", addr)
-	// if err != nil {
-	// 	return nil, nil, err
-	// }
+func NewLogger(addr string) (*Logger, func(), error) {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	cfg := zap.NewProductionEncoderConfig()
 	cfg.TimeKey = "timestamp"
@@ -29,22 +29,22 @@ func NewLogger() (*Logger, func(), error) {
 
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(cfg),
-		zapcore.AddSync(os.Stdout), // Use os.Stdout.
+		zapcore.AddSync(conn),
 		zapcore.InfoLevel,
 	)
 
 	z := zap.New(core).With(
-		zap.String("service", "logger-practice"),
+		zap.String("service", "stocks-service"),
 		zap.String("env", "dev"))
 
 	l := &Logger{
 		L: z,
-		// c: conn,
+		c: conn,
 	}
 
 	cleanup := func() {
 		_ = l.L.Sync()
-		// _ = l.c.Close()
+		_ = l.c.Close()
 	}
 
 	return l, cleanup, nil

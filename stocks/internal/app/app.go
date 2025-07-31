@@ -29,7 +29,7 @@ func NewStockServiceApp() error {
 		return fmt.Errorf("failed to initialize NewStockServiceConfig: %w", err)
 	}
 
-	logger, cleanup, err := zapLogger.NewLogger()
+	logger, cleanup, err := zapLogger.NewLogger(cfg.ExternalServices.ObservalityConfig.LogStashHost)
 	if err != nil {
 		log.Printf("error initializing logger: %v", err)
 		return fmt.Errorf("error initializing logger: %w", err)
