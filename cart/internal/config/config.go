@@ -16,6 +16,7 @@ var _ Config = (*CartServiceConfig)(nil)
 type Config interface {
 	Address() string
 	GRPCAddress() string
+	MetricsAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
@@ -28,13 +29,16 @@ type CartServiceConfig struct {
 	Postgres         PostgresConfig
 	ExternalServices ExternalServicesConfig
 	Kafka            KafkaServiceConfig
+	Observality      ObservalityConfig
 }
 
 type (
 	// ServerConfig holds server configurations for stock service.
 	ServerConfig struct {
+		ServiceName  string        `env:"SERVICE_NAME,required"`
 		HTTPPort     string        `env:"HTTP_PORT,required"`
 		GRPCPort     string        `env:"GRPC_PORT,required"`
+		MetricsPort  string        `env:"METRICS_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -54,6 +58,10 @@ type (
 	// KafkaServiceConfig holds needed configurations for cart service.
 	KafkaServiceConfig struct {
 		Brokers string `env:"KAFKA_BROKERS,required"`
+	}
+	// ObservalityConfig holds needed configurations for observality.
+	ObservalityConfig struct {
+		LogStashHost string `env:"LOGSTASH_HOST,required"`
 	}
 )
 
@@ -83,6 +91,10 @@ func (c *CartServiceConfig) Address() string {
 
 func (c *CartServiceConfig) GRPCAddress() string {
 	return net.JoinHostPort("", c.Server.GRPCPort)
+}
+
+func (c *CartServiceConfig) MetricsAddress() string {
+	return net.JoinHostPort("", c.Server.MetricsPort)
 }
 
 func (c *CartServiceConfig) SrvConfig() ServerConfig {

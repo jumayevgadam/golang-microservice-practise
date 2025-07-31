@@ -18,7 +18,7 @@ services:
     networks:
       - external-shared-network
     restart: always
-
+ 
   kafka1:
     image: confluentinc/cp-kafka:7.7.1
     container_name: kafka1

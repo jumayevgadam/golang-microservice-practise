@@ -39,14 +39,15 @@ services:
       'host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable' up"
   
   cart_service:
-    image: gadamcuma/cart_service:hw10
+    image: gadamcuma/cart_service:hw11
     container_name: cart_service_backend
     ports:
-      - "127.0.0.1:8080:8080"
-      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:8080:8080" # HTTP port
+      - "127.0.0.1:9090:9090" # gRPC port
+      - "127.0.0.1:9000:9000" # prometheus metrics port
     depends_on:
       cart_db:
-        condition: service_healthy
+        condition: service_healthy  
       cart_migrator:
        condition: service_completed_successfully
     env_file:

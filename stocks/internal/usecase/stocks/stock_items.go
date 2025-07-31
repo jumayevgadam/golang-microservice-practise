@@ -5,9 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"stocks/internal/domain"
 	"stocks/internal/kafka"
 	"stocks/internal/usecase"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 //go:generate mkdir -p mock
@@ -51,9 +55,21 @@ func NewStockServiceUseCase(
 }
 
 func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain.StockItem) error {
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "StockServiceUseCase.AddStockItem")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", stockItem.UserID)),
+		attribute.String("sku_id", fmt.Sprintf("%d", stockItem.Sku.ID)),
+		attribute.Int64("count", int64(stockItem.Count)),
+		attribute.Int64("price", int64(stockItem.Price)),
+		attribute.String("location", stockItem.Location),
+	)
+
 	// check sku exist or not.
 	sku, err := s.GetSKUByID(ctx, stockItem.Sku.ID)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return err
 	}
 
@@ -64,6 +80,7 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 		if errors.Is(err, domain.ErrStockItemNotFound) {
 			err = s.SaveStockItem(ctx, stockItem)
 			if err != nil {
+				span.SetAttributes(attribute.String("error.message", err.Error()))
 				return err
 			}
 
@@ -74,6 +91,8 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 			})
 		}
 
+		span.SetAttributes(attribute.String("error.message", err.Error()))
+
 		return err
 	}
 
@@ -81,6 +100,7 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 
 	err = s.UpdateStockItem(ctx, stockItem)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return err
 	}
 
@@ -94,12 +114,34 @@ func (s *stockServiceUseCase) AddStockItem(ctx context.Context, stockItem domain
 }
 
 func (s *stockServiceUseCase) DeleteStockItem(ctx context.Context, userID domain.UserID, skuID domain.SKUID) error {
-	return s.DeleteStockItemFromStorage(ctx, userID, skuID)
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "StockServiceUseCase.DeleteStockItem")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", userID)),
+		attribute.String("sku_id", fmt.Sprintf("%d", skuID)),
+	)
+
+	err := s.DeleteStockItemFromStorage(ctx, userID, skuID)
+	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
+		return err
+	}
+
+	return nil
 }
 
 func (s *stockServiceUseCase) GetStockItemBySKU(ctx context.Context, skuID domain.SKUID) (domain.StockItem, error) {
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "StockServiceUseCase.GetStockItemBySKU")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("sku_id", fmt.Sprintf("%d", skuID)),
+	)
+
 	stockItem, err := s.GetStockItemBySku(ctx, skuID)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return domain.StockItem{}, err
 	}
 
@@ -107,10 +149,21 @@ func (s *stockServiceUseCase) GetStockItemBySKU(ctx context.Context, skuID domai
 }
 
 func (s *stockServiceUseCase) ListStockItems(ctx context.Context, filter domain.Filter) (domain.PaginatedResponse[domain.StockItem], error) {
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "StockServiceUseCase.ListStockItems")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", filter.UserID)),
+		attribute.String("location", filter.Location),
+		attribute.Int64("page_size", int64(filter.PageSize)),
+		attribute.Int64("current_page", int64(filter.CurrentPage)),
+	)
+
 	var paginatedResponse domain.PaginatedResponse[domain.StockItem]
 	// count stock items.
 	countStockItems, err := s.CountStockItems(ctx, filter.UserID, filter.Location)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return domain.PaginatedResponse[domain.StockItem]{}, err
 	}
 
@@ -118,6 +171,7 @@ func (s *stockServiceUseCase) ListStockItems(ctx context.Context, filter domain.
 
 	listOfStockItems, err := s.ListStockItemsByLocation(ctx, filter)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return domain.PaginatedResponse[domain.StockItem]{}, err
 	}
 

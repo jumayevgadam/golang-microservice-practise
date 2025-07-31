@@ -4,6 +4,7 @@ import (
 	"cart/internal/domain"
 	"cart/internal/usecase"
 	pb "cart/pkg/api/cart"
+	"cart/pkg/log"
 	"context"
 	"errors"
 
@@ -17,11 +18,19 @@ const (
 
 type CartGRPCHandler struct {
 	pb.UnimplementedCartServiceServer
+
 	cartUC usecase.CartItemUseCase
+	logger log.Logger
 }
 
-func NewCartGRPCHandler(cartUC usecase.CartItemUseCase) *CartGRPCHandler {
-	return &CartGRPCHandler{cartUC: cartUC}
+func NewCartGRPCHandler(
+	cartUC usecase.CartItemUseCase,
+	logger log.Logger,
+) *CartGRPCHandler {
+	return &CartGRPCHandler{
+		cartUC: cartUC,
+		logger: logger,
+	}
 }
 
 func (c *CartGRPCHandler) AddCartItem(ctx context.Context, req *pb.CreateCartItemRequest) (*pb.GeneralResponse, error) {
@@ -71,7 +80,7 @@ func (c *CartGRPCHandler) ClearCartItems(ctx context.Context, req *pb.ClearCartI
 	if userID == 0 {
 		return nil, status.Error(codes.InvalidArgument, "user ID cannot be zero")
 	}
-
+	
 	err := c.cartUC.ClearCartItems(ctx, userID)
 	if err != nil {
 		if errors.Is(err, domain.ErrCartItemNotFound) {

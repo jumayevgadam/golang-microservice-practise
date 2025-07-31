@@ -1,0 +1,78 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - shared-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - shared-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: logstash
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - shared-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.51
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "6831:6831/udp" # Jaeger UDP Thrift
+      - "14268:14268" # Collector HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - shared-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9089:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - shared-network
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin  
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    external: true
+    name: external-shared-network
+
+volumes:
+  grafana-data:
+
+
+    

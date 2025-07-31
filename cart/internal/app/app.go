@@ -6,6 +6,8 @@ import (
 	"cart/internal/kafka"
 	"cart/pkg/connection"
 	"cart/pkg/constants"
+	zapLogger "cart/pkg/log/zap"
+	"cart/pkg/tracer"
 	"context"
 	"fmt"
 	"log"
@@ -24,6 +26,28 @@ func NewCartServiceApp() error {
 		return fmt.Errorf("failed to initialize NewCartServiceConfig: %w", err)
 	}
 
+	// init logger.
+	logger, cleanup, err := zapLogger.NewLogger(cfg.Observality.LogStashHost)
+	if err != nil {
+		log.Printf("error initializing logger: %v\n", err.Error())
+		return fmt.Errorf("error initializing logger: %w", err)
+	}
+
+	defer cleanup()
+
+	// init tracer.
+	tp, err := tracer.InitTracer(cfg.Server.ServiceName)
+	if err != nil {
+		return fmt.Errorf("failed to initialize tracer: %w", err)
+	}
+
+	defer func() {
+		err := tp.Shutdown(context.Background())
+		if err != nil {
+			logger.Error("error shutting down tracer")
+		}
+	}()
+
 	ctxTimeOut, cancel := context.WithTimeout(context.Background(), constants.DBCtxTimeOut*time.Second)
 	defer cancel()
 
@@ -39,13 +63,13 @@ func NewCartServiceApp() error {
 
 	kafkaProducer, err := kafka.NewCartServiceProducer(strings.Split(cfg.GetKafkaBrokers(), ","))
 	if err != nil {
-		log.Printf("failed to initialize cart service kafka producer: %v\n", err.Error())
+		logger.Errorf("failed to initialize cart service kafka producer: %v\n", err.Error())
 	}
 	defer kafkaProducer.Close()
 
-	srv := server.NewServer(cfg, psqlDB, kafkaProducer)
+	srv := server.NewServer(cfg, psqlDB, kafkaProducer, logger)
 	if err := srv.RunServer(); err != nil {
-		log.Printf("%+v\n", err.Error())
+		logger.Errorf("%+v\n", err.Error())
 		return fmt.Errorf("can not start http server: %w", err)
 	}
 
