@@ -31,6 +31,7 @@ import (
 type Server struct {
 	server        *http.Server
 	grpcServer    *grpc.Server
+	metricsServer *http.Server
 	cfg           config.Config
 	psqlDB        connection.DB
 	kafkaProducer kafka.StocksEventProducer
@@ -47,6 +48,8 @@ func NewServer(
 ) *Server {
 	return &Server{
 		server:        nil,
+		grpcServer:    nil,
+		metricsServer: nil,
 		cfg:           cfg,
 		psqlDB:        psqlDB,
 		kafkaProducer: kafkaProducer,
@@ -120,6 +123,13 @@ func (s *Server) RunServer() error {
 		s.grpcServer.GracefulStop()
 	}
 
+	// Shutdown metrics server.
+	if s.metricsServer != nil {
+		if err := s.metricsServer.Shutdown(ctxTimeOut); err != nil {
+			s.logger.Errorf("s.metricsServer.Shutdown: %v", err.Error())
+		}
+	}
+
 	wg.Wait()
 
 	s.logger.Info("stock service successfully shut down...")
@@ -165,7 +175,6 @@ func (s *Server) runGatewayServer() error {
 	// create a new serve mux for api and metrics endpoint.
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
-	mux.Handle("/metrics", promhttp.Handler())
 
 	grpcEndpoint := s.cfg.GRPCAddress()
 
@@ -198,7 +207,7 @@ func (s *Server) runMetricsServer() error {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 
-	metricsServer := &http.Server{
+	s.metricsServer = &http.Server{
 		Addr:         s.cfg.MetricsAddress(),
 		Handler:      mux,
 		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
@@ -207,7 +216,7 @@ func (s *Server) runMetricsServer() error {
 
 	s.logger.Infof("Metrics server starting on: %s", s.cfg.MetricsAddress())
 
-	if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := s.metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("failed to serve metrics server: %w", err)
 	}
 

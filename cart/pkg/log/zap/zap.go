@@ -34,12 +34,12 @@ func NewLogger(addr string) (*Logger, func(), error) {
 	)
 
 	z := zap.New(core).With(
-		zap.String("service", "logger-practice"),
+		zap.String("service", "cart-service"),
 		zap.String("env", "dev"))
 
 	l := &Logger{
 		L: z,
-		// c: conn,
+		c: conn,
 	}
 
 	cleanup := func() {

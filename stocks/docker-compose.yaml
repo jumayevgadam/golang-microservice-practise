@@ -42,8 +42,9 @@ services:
     image: gadamcuma/stocks_service:hw11
     container_name: stocks_service_backend
     ports:
-      - "127.0.0.1:8081:8081"
-      - "127.0.0.1:9093:9091"
+      - "127.0.0.1:8081:8081" # HTTP port
+      - "127.0.0.1:9093:9091" # gRPC port
+      - "127.0.0.1:9001:9001" # prometheus metrics port
     depends_on:
       stocks_db:
         condition: service_healthy
