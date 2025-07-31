@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"cart/internal/config"
 	"cart/internal/kafka"
 	"cart/internal/metrics"
@@ -20,11 +19,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -59,8 +55,7 @@ func NewServer(
 // RunServer starts http and grpc server in goroutines and gracefully shutdown if signal catches.
 func (s *Server) RunServer() error {
 	var wg sync.WaitGroup
-
-	errChan := make(chan error, 2)
+	errChan := make(chan error, 3)
 
 	// start grpc server.
 	wg.Add(1)
@@ -81,6 +76,17 @@ func (s *Server) RunServer() error {
 
 		if err := s.runGatewayServer(); err != nil {
 			errChan <- fmt.Errorf("runGatewayServer: %w", err)
+		}
+	}()
+
+	// start metrics server.
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		if err := s.runMetricsServer(); err != nil {
+			errChan <- fmt.Errorf("runMetricsServer: %w", err)
 		}
 	}()
 
@@ -130,7 +136,9 @@ func (s *Server) runGRPCServer() error {
 		}
 	}(lis)
 	// create a grpc server.
-	s.grpcServer = grpc.NewServer()
+	s.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(grpcMiddleware(s.logger, s.metrics)),
+	)
 	// enable reflection for grpcui.
 	err = s.registerGRPCServices()
 	if err != nil {
@@ -163,7 +171,6 @@ func (s *Server) runGatewayServer() error {
 	// create a new serve mux for api and metrics endpoint.
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
-	mux.Handle("/metrics", promhttp.Handler())
 
 	grpcEndpoint := s.cfg.GRPCAddress()
 
@@ -191,94 +198,22 @@ func (s *Server) runGatewayServer() error {
 	return nil
 }
 
-func observalityMiddleware(logger log.Logger, metrics metrics.Metrics) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
+func (s *Server) runMetricsServer() error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
 
-			// extract or generate request ID.
-			requestID := r.Header.Get("X-Request-ID")
-			if requestID == "" {
-				requestID = uuid.New().String()
-			}
-
-			// extract trace context and start a new span.
-			ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(r.Context(), r.URL.Path)
-			defer span.End()
-			// we need to update request context with trace.
-			r = r.WithContext(ctx)
-			// wrap response writer to capture status code and body.
-			rw := &responseWriter{
-				ResponseWriter: w,
-				statusCode:     http.StatusOK,
-				body:           new(bytes.Buffer),
-			}
-
-			// call the next handler.
-			next.ServeHTTP(rw, r)
-
-			// calculate duration.
-			duration := time.Since(start).Seconds()
-
-			traceID := span.SpanContext().TraceID().String()
-			logFields := map[string]interface{}{
-				"level":      "info",
-				"method":     r.Method,
-				"path":       r.URL.Path,
-				"status":     rw.statusCode,
-				"trace_id":   traceID,
-				"request_id": requestID,
-				"duration":   duration,
-			}
-
-			// we need to handle errors.
-			var msg string
-			if rw.statusCode >= 400 {
-				logFields["level"] = "error"
-				logFields["msg"] = "Request failed"
-
-				if rw.body.Len() > 0 {
-					logFields["error"] = rw.body.String()
-				} else {
-					logFields["error"] = http.StatusText(rw.statusCode)
-				}
-
-				metrics.IncError(r.URL.Path)
-
-				// record error in span.
-				span.SetAttributes(attribute.Int("http.status_code", rw.statusCode))
-				span.SetAttributes(attribute.String("error.message", logFields["error"].(string)))
-			} else {
-				logFields["level"] = "info"
-				logFields["msg"] = "HTTP request processed"
-				msg = "HTTP request processed"
-			}
-
-			fields := make([]log.Field, 0, len(logFields))
-			for k, v := range logFields {
-				fields = append(fields, log.Any(k, v))
-			}
-
-			logger.Info(msg, fields...)
-			// at last record latency.
-			metrics.ObserveLatency(r.URL.Path, duration)
-		})
+	metricsServer := &http.Server{
+		Addr:         s.cfg.MetricsAddress(),
+		Handler:      mux,
+		ReadTimeout:  s.cfg.SrvConfig().ReadTimeOut,
+		WriteTimeout: s.cfg.SrvConfig().WriteTimeOut,
 	}
-}
 
-// responseWriter wraps http.ResponseWriter to capture status code and response body
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-	body       *bytes.Buffer
-}
+	s.logger.Infof("Metrics server starting on: %s", s.cfg.MetricsAddress())
 
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
+	if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("failed to serve metrics server: %w", err)
+	}
 
-func (rw *responseWriter) Write(b []byte) (int, error) {
-	rw.body.Write(b)
-	return rw.ResponseWriter.Write(b)
+	return nil
 }

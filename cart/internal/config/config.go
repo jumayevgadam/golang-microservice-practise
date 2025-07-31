@@ -16,6 +16,7 @@ var _ Config = (*CartServiceConfig)(nil)
 type Config interface {
 	Address() string
 	GRPCAddress() string
+	MetricsAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	StockServiceURL() string
@@ -37,6 +38,7 @@ type (
 		ServiceName  string        `env:"SERVICE_NAME,required"`
 		HTTPPort     string        `env:"HTTP_PORT,required"`
 		GRPCPort     string        `env:"GRPC_PORT,required"`
+		MetricsPort  string        `env:"METRICS_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -89,6 +91,10 @@ func (c *CartServiceConfig) Address() string {
 
 func (c *CartServiceConfig) GRPCAddress() string {
 	return net.JoinHostPort("", c.Server.GRPCPort)
+}
+
+func (c *CartServiceConfig) MetricsAddress() string {
+	return net.JoinHostPort("", c.Server.MetricsPort)
 }
 
 func (c *CartServiceConfig) SrvConfig() ServerConfig {

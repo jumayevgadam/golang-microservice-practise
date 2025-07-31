@@ -1,6 +1,8 @@
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 type Metrics interface {
 	ObserveLatency(path string, duration float64)

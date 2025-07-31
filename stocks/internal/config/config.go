@@ -16,6 +16,7 @@ var _ Config = (*StockServiceConfig)(nil)
 type Config interface {
 	Address() string
 	GRPCAddress() string
+	MetricsAddress() string
 	SrvConfig() ServerConfig
 	DbConfig() PostgresConfig
 	GetKafkaBrokers() string
@@ -34,6 +35,7 @@ type (
 		ServiceName  string        `env:"SERVICE_NAME,required"`
 		HTTPPort     string        `env:"HTTP_PORT,required"`
 		GRPCPORT     string        `env:"GRPC_PORT,required"`
+		MetricsPort  string        `env:"METRICS_PORT,required"`
 		ReadTimeOut  time.Duration `env:"READ_TIMEOUT,required"`
 		WriteTimeOut time.Duration `env:"WRITE_TIMEOUT,required"`
 	}
@@ -83,6 +85,10 @@ func (c *StockServiceConfig) Address() string {
 
 func (c *StockServiceConfig) GRPCAddress() string {
 	return net.JoinHostPort("", c.Server.GRPCPORT)
+}
+
+func (c *StockServiceConfig) MetricsAddress() string {
+	return net.JoinHostPort("", c.Server.MetricsPort)
 }
 
 func (c *StockServiceConfig) SrvConfig() ServerConfig {

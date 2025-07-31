@@ -6,6 +6,10 @@ import (
 	"cart/internal/usecase"
 	"context"
 	"fmt"
+	"os"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 //go:generate mkdir -p mock
@@ -47,8 +51,18 @@ func NewCartServiceUseCase(
 }
 
 func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.CartItem) error {
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "CartServiceUseCase.AddCartItem")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", cartItem.UserID)),
+		attribute.String("sku_id", fmt.Sprintf("%d", cartItem.SkuID)),
+		attribute.Int64("count", int64(cartItem.Count)),
+	)
+
 	stockItemBySKU, err := u.GetStockItemBySKU(ctx, cartItem.SkuID)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return err
 	}
 
@@ -69,6 +83,8 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 			Reason: "not enough stock",
 		})
 
+		span.SetAttributes(attribute.String("error.message", domain.ErrInSufficientStockCount.Error()))
+
 		return domain.ErrInSufficientStockCount
 	}
 
@@ -78,19 +94,54 @@ func (u *cartServiceUseCase) AddCartItem(ctx context.Context, cartItem domain.Ca
 }
 
 func (u *cartServiceUseCase) DeleteCartItem(ctx context.Context, userID domain.UserID, skuID domain.SkuID) error {
-	return u.RemoveCartItem(ctx, userID, skuID)
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "CartServiceUseCase.DeleteCartItem")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", userID)),
+		attribute.String("sku_id", fmt.Sprintf("%d", skuID)),
+	)
+
+	err := u.RemoveCartItem(ctx, userID, skuID)
+	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
+		return err
+	}
+
+	return nil
 }
 
 func (u *cartServiceUseCase) ClearCartItems(ctx context.Context, userID domain.UserID) error {
-	return u.RemoveAllCartItems(ctx, userID)
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "CartServiceUseCase.ClearCartItems")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", userID)),
+	)
+
+	err := u.RemoveAllCartItems(ctx, userID)
+	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
+		return err
+	}
+
+	return nil
 }
 
 func (u *cartServiceUseCase) ListCartItems(ctx context.Context, userID domain.UserID) (domain.ListCartItems, error) {
+	ctx, span := otel.Tracer(os.Getenv("SERVICE_NAME")).Start(ctx, "CartServiceUseCase.ListCartItems")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("user_id", fmt.Sprintf("%d", userID)),
+	)
+
 	var listCartItemsResponse domain.ListCartItems
 	var totalPrice uint32
 
 	listCartItems, err := u.ListCartItemsByUserID(ctx, userID)
 	if err != nil {
+		span.SetAttributes(attribute.String("error.message", err.Error()))
 		return domain.ListCartItems{}, err
 	}
 	// call service...
@@ -99,6 +150,7 @@ func (u *cartServiceUseCase) ListCartItems(ctx context.Context, userID domain.Us
 	for _, listCartItem := range listCartItems {
 		stockItem, err := u.GetStockItemBySKU(ctx, listCartItem.SkuID)
 		if err != nil {
+			span.SetAttributes(attribute.String("error.message", err.Error()))
 			continue
 		}
 
