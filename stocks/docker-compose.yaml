@@ -39,7 +39,7 @@ services:
       'host=stocks_db user=postgres password=12345 dbname=stocks_service_db sslmode=disable' up"
   
   stocks_service:
-    image: gadamcuma/stocks_service:hw10
+    image: gadamcuma/stocks_service:hw11
     container_name: stocks_service_backend
     ports:
       - "127.0.0.1:8081:8081"

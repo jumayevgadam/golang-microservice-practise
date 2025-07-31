@@ -39,7 +39,7 @@ services:
       'host=cart_db user=postgres password=12345 dbname=cart_service_db sslmode=disable' up"
   
   cart_service:
-    image: gadamcuma/cart_service:hw10
+    image: gadamcuma/cart_service:hw11
     container_name: cart_service_backend
     ports:
       - "127.0.0.1:8080:8080"

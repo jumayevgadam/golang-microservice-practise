@@ -29,7 +29,7 @@ func NewCartServiceApp() error {
 	// init logger.
 	logger, cleanup, err := zapLogger.NewLogger(cfg.Observality.LogStashHost)
 	if err != nil {
-		return fmt.Errorf("error initializing logger: %w", err)
+		log.Printf("error initializing logger: %v", err)
 	}
 
 	defer cleanup()
