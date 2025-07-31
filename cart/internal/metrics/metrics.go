@@ -19,8 +19,9 @@ type AppMetrics struct {
 func RegisterMetrics() *AppMetrics {
 	responseLatency := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "http_response_duration_seconds",
-			Help: "Histogram of response latencies",
+			Name:    "http_response_duration_seconds",
+			Help:    "Histogram of response latencies",
+			Buckets: prometheus.DefBuckets,
 		},
 		[]string{"path"},
 	)
