@@ -52,8 +52,6 @@ Create service skeletons for cart and stocks services according to the [document
 
 ---
 
-## Homework 7
-
 ### 1. Write a Dockerfile
 
 - Must build and run your application (e.g., cart, stock, etc.)
@@ -94,7 +92,7 @@ I should be able to pull your image using:
 - Sample requests or endpoints if available
 
 
-## Homework 8
+## TESTING
 
 ### Requirements:
 - Cover the handlers and use cases with unit tests. Minimum coverage: 40%. 
@@ -111,7 +109,7 @@ Prepare a Makefile for each service that includes the following commands:
 After completing all changes, don’t forget to update your Docker Hub images.
 
 
-## Homework 9
+## KAFKA
 - [Kafka-service](metrics-consumer/README.md)
 
 ## Homework 10
@@ -207,7 +205,7 @@ docker build -t service_name:hw10 .
 
 
 ---
-## Homework 11: Logging, Tracing, and Metrics
+## Logging, Tracing, and Metrics
 
 ### Overview
 
